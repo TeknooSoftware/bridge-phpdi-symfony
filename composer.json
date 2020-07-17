@@ -1,7 +1,7 @@
 {
-    "name": "php-di/symfony-bridge",
+    "name": "teknoo/bridge-phpdi-symfony",
     "type": "library",
-    "description": "Integrates PHP-DI to Symfony",
+    "description": "Integrates PHP-DI to Symfony, Fork from php-di/symfony-bridge",
     "homepage": "http://php-di.org/doc/frameworks/symfony2.html",
     "license": "MIT",
     "autoload": {
