@@ -27,7 +27,7 @@ namespace Teknoo\DI\SymfonyBridge\DependencyInjection;
 use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use Teknoo\DI\SymfonyBridge\Container\Bridge;
+use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -37,30 +37,24 @@ class DIBridgeExtension extends Extension
 {
     private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
     {
-        $builderClass = $configuration['builder_class'];
-        if (!\class_exists($builderClass)) {
-            throw new \RuntimeException("$builderClass was not found");
-        }
-
-        $bridge = new Bridge(
-            new $builderClass,
+        $builder = new BridgeBuilder(
+            new DIContainerBuilder,
             $container
         );
 
         if ($configuration['definitions']) {
-            $bridge->loadDefinition(
-                $configuration['definitions'],
-                $container->getParameter('%kernel.project_dir%')
+            $builder->loadDefinition(
+                $configuration['definitions']
             );
         }
 
         if ($configuration['import']) {
             foreach ($configuration['import'] as $diKey => $sfKey) {
-                $bridge->import($diKey, $sfKey);
+                $builder->import($diKey, $sfKey);
             }
         }
 
-        $bridge->initializeSymfonyContainer();
+        $builder->initializeSymfonyContainer();
     }
 
     public function load(array $configs, SymfonyContainerBuilder $container): self
@@ -68,8 +62,8 @@ class DIBridgeExtension extends Extension
         $configuration = new Configuration();
         $this->processConfiguration($configuration, $configs);
 
-        if (isset($configs['di_bridge'])) {
-            $this->initializePHPDI($configs['di_bridge'], $container);
+        if (!empty($configs)) {
+            $this->initializePHPDI($configs[0], $container); //todo [0]
         }
 
         return $this;

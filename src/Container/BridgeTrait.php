@@ -33,53 +33,25 @@ use Symfony\Component\DependencyInjection\Container as SfContainer;
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Bridge implements ContainerInterface
+trait BridgeTrait
 {
-    use BridgeTrait;
-
-    private DIContainerBuilder $diBuilder;
-
-    private SfContainer $sfContainer;
-
-    private array $definitionsFiles;
-
-    private array $definitionsImport;
-
-    private ?DIContainer $diContainer = null;
-
-    public function __construct(
+    private function buildContainer(
         DIContainerBuilder $diBuilder,
         SfContainer $sfContainer,
         array $definitionsFiles,
         array $definitionsImport
-    ) {
-        $this->diBuilder = $diBuilder;
-        $this->sfContainer = $sfContainer;
-        $this->definitionsFiles = $definitionsFiles;
-        $this->definitionsImport = $definitionsImport;
-    }
+    ): DIContainer {
+        $diBuilder->wrapContainer($sfContainer);
+        $diBuilder->addDefinitions($definitionsFiles);
 
-    private function getDIContainer(): DIContainer
-    {
-        if (null !== $this->diContainer) {
-            return $this->diContainer;
+        $imports = [];
+        foreach ($definitionsImport as $diKey => $sfKey) {
+            $imports[$diKey] = static function (ContainerInterface $container) use ($sfKey) {
+                return $container->get($sfKey);
+            };
         }
+        $diBuilder->addDefinitions($imports);
 
-        return $this->diContainer = $this->buildContainer(
-            $this->diBuilder,
-            $this->sfContainer,
-            $this->definitionsFiles,
-            $this->definitionsImport
-        );
-    }
-
-    public function get($id)
-    {
-        return $this->getDIContainer()->get($id);
-    }
-
-    public function has($id)
-    {
-        return $this->getDIContainer()->has($id);
+        return $diBuilder->build();
     }
 }
