@@ -24,10 +24,7 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge;
 
-use Symfony\Component\DependencyInjection\Compiler\PassConfig;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Teknoo\DI\SymfonyBridge\DependencyInjection\CompilerPass;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -35,15 +32,4 @@ use Teknoo\DI\SymfonyBridge\DependencyInjection\CompilerPass;
  */
 class DIBridgeBundle extends Bundle
 {
-    public function build(ContainerBuilder $container): DIBridgeBundle
-    {
-        parent::build($container);
-
-        $container->addCompilerPass(
-            new CompilerPass(),
-            PassConfig::TYPE_BEFORE_OPTIMIZATION
-        );
-
-        return $this;
-    }
 }

@@ -24,10 +24,10 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\DependencyInjection;
 
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use DI\ContainerBuilder as DIContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Teknoo\DI\SymfonyBridge\Container\Bridge;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -35,13 +35,42 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  */
 class DIBridgeExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container): DIBridgeExtension
+    private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
+    {
+        $builderClass = $configuration['builder_class'];
+        if (!\class_exists($builderClass)) {
+            throw new \RuntimeException("$builderClass was not found");
+        }
+
+        $bridge = new Bridge(
+            new $builderClass,
+            $container
+        );
+
+        if ($configuration['definitions']) {
+            $bridge->loadDefinition(
+                $configuration['definitions'],
+                $container->getParameter('%kernel.project_dir%') . '/vendor'
+            );
+        }
+
+        if ($configuration['import']) {
+            foreach ($configuration['import'] as $diKey => $sfKey) {
+                $bridge->import($diKey, $sfKey);
+            }
+        }
+
+        $bridge->initializeSymfonyContainer();
+    }
+
+    public function load(array $configs, SymfonyContainerBuilder $container): self
     {
         $configuration = new Configuration();
         $this->processConfiguration($configuration, $configs);
 
-        $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
-        $loader->load('services.yml');
+        if (isset($configs['di_bridge'])) {
+            $this->initializePHPDI($configs['di_bridge'], $container);
+        }
 
         return $this;
     }

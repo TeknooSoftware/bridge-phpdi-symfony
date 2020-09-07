@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\DependencyInjection;
 
+use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -35,6 +36,21 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        return new TreeBuilder('di_bridge');
+        $treeBuilder = new TreeBuilder('di_bridge');
+
+        $root = $treeBuilder->getRootNode();
+        $root->children()
+            ->arrayNode('definitions')
+                ->scalarPrototype()->end()
+            ->end() // definitions
+            ->arrayNode('import')
+                ->scalarPrototype()->end()
+            ->end() //
+            ->scalarNode('builder_class')
+                ->defaultValue(DIContainerBuilder::class)
+            ->end() //builder_class
+        ->end();
+
+        return $treeBuilder;
     }
 }
