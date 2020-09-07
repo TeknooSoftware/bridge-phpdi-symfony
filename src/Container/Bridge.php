@@ -26,14 +26,13 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Bridge implements ContainerInterface
+class Bridge
 {
     use BridgeTrait;
 
@@ -73,13 +72,8 @@ class Bridge implements ContainerInterface
         );
     }
 
-    public function get($id)
+    public function __invoke($id)
     {
         return $this->getDIContainer()->get($id);
-    }
-
-    public function has($id)
-    {
-        return $this->getDIContainer()->has($id);
     }
 }

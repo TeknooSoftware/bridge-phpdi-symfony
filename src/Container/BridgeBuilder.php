@@ -24,8 +24,11 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
-use DI\Container;
 use DI\ContainerBuilder as DIContainerBuilder;
+use DI\Definition\ArrayDefinition;
+use DI\Definition\FactoryDefinition;
+use DI\Definition\ObjectDefinition;
+use DI\Definition\ValueDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -73,7 +76,7 @@ class BridgeBuilder
         return $this->buildContainer(
             $this->diBuilder,
             $this->sfBuilder,
-            $this->definitionsFiles,
+            \array_keys($this->definitionsFiles),
             $this->definitionsImport
         );
     }
@@ -85,7 +88,7 @@ class BridgeBuilder
             [
                 new Reference(DIContainerBuilder::class),
                 new Reference('service_container'),
-                $this->definitionsFiles,
+                \array_keys($this->definitionsFiles),
                 $this->definitionsImport
             ]
         );
@@ -101,9 +104,37 @@ class BridgeBuilder
         ];
 
         foreach ($diContainer->getKnownEntryNames() as $entryName) {
-            $className = null;
-            if (\class_exists($entryName)) {
-                $className = $entryName;
+            $className = $entryName;
+            if (!\class_exists($entryName) && !\interface_exists($entryName)) {
+                $diDefinition = $diContainer->extractDefinition($entryName);
+
+                if ($diDefinition instanceof ObjectDefinition) {
+                    $className = $diDefinition->getClassName();
+                } elseif ($diDefinition instanceof FactoryDefinition) {
+                    $callable = $diDefinition->getCallable();
+
+                    $rm = null;
+                    if (\is_object($callable)) {
+                        $ro = new \ReflectionObject($callable);
+                        $rm = $ro->getMethod('__invoke');
+                    } elseif(\is_array($callable)) {
+                        $ro = new \ReflectionObject($callable[0]);
+                        $rm = $ro->getMethod($callable[1]);
+                    } else {
+                        $rm = new \ReflectionFunction($callable);
+                    }
+
+                    $rt = $rm->getReturnType();
+                    $className = $rt->p2;
+                } elseif ($diDefinition instanceof ValueDefinition) {
+                    $this->sfBuilder->setParameter($entryName, $diDefinition->getValue());
+
+                    continue;
+                } elseif ($diDefinition instanceof ArrayDefinition) {
+                    $this->sfBuilder->setParameter($entryName, $diDefinition->getValues());
+
+                    continue;
+                }
             }
 
             $definition = new Definition($className);

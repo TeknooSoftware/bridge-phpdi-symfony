@@ -28,6 +28,7 @@ use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
+use Teknoo\DI\SymfonyBridge\Container\Container;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -38,7 +39,7 @@ class DIBridgeExtension extends Extension
     private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
     {
         $builder = new BridgeBuilder(
-            new DIContainerBuilder,
+            new DIContainerBuilder(Container::class),
             $container
         );
 

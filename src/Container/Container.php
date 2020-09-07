@@ -25,36 +25,39 @@ declare(strict_types=1);
 namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
-use DI\ContainerBuilder as DIContainerBuilder;
+use DI\Definition\Definition;
+use DI\Definition\Source\MutableDefinitionSource;
+use DI\Proxy\ProxyFactory;
 use Psr\Container\ContainerInterface;
-use Symfony\Component\DependencyInjection\Container as SfContainer;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-trait BridgeTrait
+class Container extends DIContainer
 {
-    private function buildContainer(
-        DIContainerBuilder $diBuilder,
-        SfContainer $sfContainer,
-        array $definitionsFiles,
-        array $definitionsImport
-    ): DIContainer {
-        $diBuilder->wrapContainer($sfContainer);
+    private ?MutableDefinitionSource $originalDefinitions;
 
-        foreach ($definitionsFiles as $definitionFile) {
-            $diBuilder->addDefinitions($definitionFile);
+    public function __construct(
+        ?MutableDefinitionSource $definitionSource = null,
+        ?ProxyFactory $proxyFactory = null,
+        ?ContainerInterface $wrapperContainer = null
+    ) {
+        parent::__construct(
+            $definitionSource,
+            $proxyFactory,
+            $wrapperContainer
+        );
+
+        $this->originalDefinitions = $definitionSource;
+    }
+
+    public function extractDefinition(string $name): ?Definition
+    {
+        if (null === $this->originalDefinitions) {
+            return null;
         }
 
-        $imports = [];
-        foreach ($definitionsImport as $diKey => $sfKey) {
-            $imports[$diKey] = static function (ContainerInterface $container) use ($sfKey) {
-                return $container->get($sfKey);
-            };
-        }
-        $diBuilder->addDefinitions($imports);
-
-        return $diBuilder->build();
+        return $this->originalDefinitions->getDefinition($name);
     }
 }
