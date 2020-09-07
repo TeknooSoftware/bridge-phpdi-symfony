@@ -2,9 +2,9 @@
 
 namespace DI\Bridge\Symfony\Test\FunctionalTest\Fixtures;
 
-use DI\Bridge\Symfony\Kernel;
 use DI\ContainerBuilder;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\HttpKernel\Kernel;
 
 class AppKernel extends Kernel
 {

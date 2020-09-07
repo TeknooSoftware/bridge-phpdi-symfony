@@ -1,22 +1,22 @@
 language: php
 
+sudo: false
+
 php:
-  - 7.2
-  - 7.3
   - 7.4
 
 matrix:
   include:
-    - php: 7.2
-      env: dependencies=lowest
-    - php: 7.3
-      env: dependencies=lowest
+    - php: 7.4
     - php: 7.4
       env: dependencies=lowest
 
+install:
+  - composer self-update
+
 before_script:
-  - composer install -n
-  - if [ "$dependencies" = "lowest" ]; then composer update --prefer-lowest --prefer-stable -n; fi;
+  - make
 
 script:
-  - vendor/bin/phpunit
+  - make qa
+  - make test
