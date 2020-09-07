@@ -28,10 +28,12 @@ use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
+use DI\Definition\Reference as DIReference;
+use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Reference as SfReference;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -86,8 +88,8 @@ class BridgeBuilder
         return new Definition(
             Bridge::class,
             [
-                new Reference(DIContainerBuilder::class),
-                new Reference('service_container'),
+                new SfReference(DIContainerBuilder::class),
+                new SfReference('service_container'),
                 \array_keys($this->definitionsFiles),
                 $this->definitionsImport
             ]
@@ -103,18 +105,29 @@ class BridgeBuilder
             Bridge::class => $this->getBridgeDefinition(),
         ];
 
-        foreach ($diContainer->getKnownEntryNames() as $entryName) {
+        $entries = $diContainer->getKnownEntryNames();
+        foreach ($entries as $entryName) {
             $className = $entryName;
             if (!\class_exists($entryName) && !\interface_exists($entryName)) {
-                $diDefinition = $diContainer->extractDefinition($entryName);
+                $diDefinition = null;
+                $entryId = $entryName; //todo name
+                do {
+                    if ($diDefinition instanceof DIReference) {
+                        $entryId = $diDefinition->getTargetEntryName();
+                    }
+
+                    $diDefinition = $diContainer->extractDefinition($entryId);
+                } while ($diDefinition instanceof DIReference);
 
                 if ($diDefinition instanceof ObjectDefinition) {
+                    $className = $diDefinition->getClassName();
+                } elseif ($diDefinition instanceof ObjectDefinition) {
                     $className = $diDefinition->getClassName();
                 } elseif ($diDefinition instanceof FactoryDefinition) {
                     $callable = $diDefinition->getCallable();
 
                     $rm = null;
-                    if (\is_object($callable)) {
+                    if (!$callable instanceof \Closure && \is_object($callable)) {
                         $ro = new \ReflectionObject($callable);
                         $rm = $ro->getMethod('__invoke');
                     } elseif(\is_array($callable)) {
@@ -125,7 +138,11 @@ class BridgeBuilder
                     }
 
                     $rt = $rm->getReturnType();
-                    $className = $rt->p2;
+                    $className = (string) $rt;
+                } elseif ($diDefinition instanceof StringDefinition) {
+                    $this->sfBuilder->setParameter($entryName, $diDefinition->getExpression());
+
+                    continue;
                 } elseif ($diDefinition instanceof ValueDefinition) {
                     $this->sfBuilder->setParameter($entryName, $diDefinition->getValue());
 
@@ -134,11 +151,13 @@ class BridgeBuilder
                     $this->sfBuilder->setParameter($entryName, $diDefinition->getValues());
 
                     continue;
+                } else {
+                    continue;
                 }
             }
 
             $definition = new Definition($className);
-            $definition->setFactory(new Reference(Bridge::class));
+            $definition->setFactory(new SfReference(Bridge::class));
             $definition->setArguments([$entryName]);
             $definitions[$entryName] = $definition;
         }
