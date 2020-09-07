@@ -50,7 +50,7 @@ class DIBridgeExtension extends Extension
         if ($configuration['definitions']) {
             $bridge->loadDefinition(
                 $configuration['definitions'],
-                $container->getParameter('%kernel.project_dir%') . '/vendor'
+                $container->getParameter('%kernel.project_dir%')
             );
         }
 

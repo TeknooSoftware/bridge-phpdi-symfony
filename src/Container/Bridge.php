@@ -53,10 +53,14 @@ class Bridge
         $this->diBuilder->wrapContainer($this->sfBuilder);
     }
 
-    public function loadDefinition(array $definitions, string $vendorPath): self
+    public function loadDefinition(array $definitions, string $projectDir): self
     {
         foreach ($definitions as &$definition) {
-            $definition = \str_replace('%vendor%', $vendorPath, $definition);
+            $definition = \str_replace(
+                ['%vendor%', '%project_dir%'],
+                [$projectDir . '/vendor', $projectDir],
+                $definition
+            );
 
             $this->diBuilder->addDefinitions($definition);
         }
