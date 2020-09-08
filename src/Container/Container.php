@@ -26,6 +26,7 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
 use DI\Definition\Definition;
+use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 use DI\Proxy\ProxyFactory;
 use Psr\Container\ContainerInterface;
@@ -58,6 +59,10 @@ class Container extends DIContainer
             return null;
         }
 
-        return $this->originalDefinitions->getDefinition($name);
+        try {
+            return $this->originalDefinitions->getDefinition($name);
+        } catch (InvalidDefinition $error) {
+            return null;
+        }
     }
 }

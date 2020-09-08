@@ -26,9 +26,7 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
-use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
@@ -76,11 +74,33 @@ class Bridge implements ContainerInterface
         );
     }
 
-    public function __invoke($id)
+    /**
+     * Service Factory used by Symfony' container to get service instance from PHP-DI
+     *
+     * @return mixed
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     */
+    public function __invoke(string $id)
     {
-        return $this->getDIContainer()->get($id);
+        $diContainer = $this->getDIContainer();
+
+        if ($diContainer->has($id)) {
+            return $this->diContainer->get($id);
+        }
+
+        throw new ServiceNotFoundException($id);
     }
 
+    /**
+     * Get Service bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are accessible only
+     * via getParameter, but in PHP-DI via the method "get" like other definition.
+     *
+     * @param string $id
+     * @return mixed
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     */
     public function get($id)
     {
         if ($this->sfContainer->has($id)) {
@@ -92,16 +112,27 @@ class Bridge implements ContainerInterface
             return $this->diContainer->get($id);
         }
 
+        if ($this->sfContainer->hasParameter($id)) {
+            return $this->sfContainer->getParameter($id);
+        }
+
         throw new ServiceNotFoundException($id);
     }
 
-    public function has($id)
+    /**
+     * Service checking bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are accessible only
+     * via getParameter, but in PHP-DI via the method "get" like other definition.
+     *
+     * @param string $id
+     * @return bool
+     */
+    public function has($id): bool
     {
         if ($this->sfContainer->has($id)) {
             return true;
         }
 
         $diContainer = $this->getDIContainer();
-        return $diContainer->has($id);
+        return $diContainer->has($id) || $this->sfContainer->hasParameter($id);
     }
 }

@@ -24,16 +24,18 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
+use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
+use DI\Definition\Definition as DIDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 
 /**
@@ -76,17 +78,23 @@ class BridgeBuilder
 
     private function getDIContainer(): Container
     {
-        return $this->buildContainer(
+        $container = $this->buildContainer(
             $this->diBuilder,
             $this->sfBuilder,
             \array_keys($this->definitionsFiles),
             $this->definitionsImport
         );
+
+        if (!$container instanceof Container) {
+            throw new \RuntimeException('Error bad container needed');
+        }
+
+        return $container;
     }
 
-    private function getBridgeDefinition(): Definition
+    private function getBridgeDefinition(): SfDefinition
     {
-        return new Definition(
+        return new SfDefinition(
             Bridge::class,
             [
                 new SfReference(DIContainerBuilder::class),
@@ -97,78 +105,122 @@ class BridgeBuilder
         );
     }
 
+    private function createDefinition(
+        string $className,
+        string $diEntryName
+    ): SfDefinition {
+        $definition = new SfDefinition($className);
+        $definition->setFactory(new SfReference(Bridge::class));
+        $definition->setArguments([$diEntryName]);
+        $definition->setPublic(true);
+
+        return $definition;
+    }
+
+    private function setParameter(string $parameterName, $value): void
+    {
+        $this->sfBuilder->setParameter(
+            $parameterName,
+            $value
+        );
+    }
+
+    private function extractDIDefinition(DIContainer $container, string $entryName): DIDefinition
+    {
+        $diDefinition = null;
+        do {
+            if ($diDefinition instanceof DIReference) {
+                $entryName = $diDefinition->getTargetEntryName();
+            }
+
+            $diDefinition = $container->extractDefinition($entryName);
+        } while ($diDefinition instanceof DIReference);
+
+        return $diDefinition;
+    }
+
+    private function getClassFromFactory(FactoryDefinition $definition): string
+    {
+        $callable = $definition->getCallable();
+
+        $reflectionMethod = null;
+        if (!$callable instanceof \Closure && \is_object($callable)) {
+            //Invokable object
+            $reflectionObject = new \ReflectionObject($callable);
+            $reflectionMethod = $reflectionObject->getMethod('__invoke');
+        } elseif(\is_array($callable)) {
+            //Callable is a public method from object
+            $reflectionObject = new \ReflectionObject($callable[0]);
+            $reflectionMethod = $reflectionObject->getMethod($callable[1]);
+        } else {
+            //Is internal function or a closure
+            $reflectionMethod = new \ReflectionFunction($callable);
+        }
+
+        return (string) $reflectionMethod->getReturnType();
+    }
+
+    private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
+    {
+        if ($diDefinition instanceof ObjectDefinition) {
+            $definitions[$entryName] = $this->createDefinition($diDefinition->getClassName(), $entryName);
+
+            return;
+        }
+
+        if ($diDefinition instanceof FactoryDefinition) {
+            $definitions[$entryName] = $this->createDefinition(
+                $this->getClassFromFactory($diDefinition),
+                $entryName
+            );
+
+            return;
+        }
+
+        if ($diDefinition instanceof EnvironmentVariableDefinition) {
+            $this->setParameter($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
+
+            return;
+        }
+
+        if ($diDefinition instanceof StringDefinition) {
+            $this->setParameter($entryName, $diDefinition->getExpression());
+
+            return;
+        }
+
+        if ($diDefinition instanceof ValueDefinition) {
+            $this->setParameter($entryName, $diDefinition->getValue());
+
+            return;
+        }
+
+        if ($diDefinition instanceof ArrayDefinition) {
+            $this->setParameter($entryName, $diDefinition->getValues());
+
+            return;
+        }
+    }
+
     public function initializeSymfonyContainer(): self
     {
         $diContainer = $this->getDIContainer();
 
         $definitions = [
-            DIContainerBuilder::class => new Definition(DIContainerBuilder::class),
+            DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
             Bridge::class => $this->getBridgeDefinition(),
         ];
 
-        $entries = $diContainer->getKnownEntryNames();
-        foreach ($entries as $entryName) {
-            $className = $entryName;
-            if (!\class_exists($entryName) && !\interface_exists($entryName)) {
-                $diDefinition = null;
-                $entryId = $entryName; //todo name
-                do {
-                    if ($diDefinition instanceof DIReference) {
-                        $entryId = $diDefinition->getTargetEntryName();
-                    }
+        foreach ($diContainer->getKnownEntryNames() as $entryName) {
+            if (\class_exists($entryName) || \interface_exists($entryName)) {
+                $definitions[$entryName] = $this->createDefinition($entryName, $entryName);
 
-                    $diDefinition = $diContainer->extractDefinition($entryId);
-                } while ($diDefinition instanceof DIReference);
-
-                if ($diDefinition instanceof ObjectDefinition) {
-                    $className = $diDefinition->getClassName();
-                } elseif ($diDefinition instanceof ObjectDefinition) {
-                    $className = $diDefinition->getClassName();
-                } elseif ($diDefinition instanceof FactoryDefinition) {
-                    $callable = $diDefinition->getCallable();
-
-                    $rm = null;
-                    if (!$callable instanceof \Closure && \is_object($callable)) {
-                        $ro = new \ReflectionObject($callable);
-                        $rm = $ro->getMethod('__invoke');
-                    } elseif(\is_array($callable)) {
-                        $ro = new \ReflectionObject($callable[0]);
-                        $rm = $ro->getMethod($callable[1]);
-                    } else {
-                        $rm = new \ReflectionFunction($callable);
-                    }
-
-                    $rt = $rm->getReturnType();
-                    $className = (string) $rt;
-                } elseif ($diDefinition instanceof EnvironmentVariableDefinition) {
-                    $this->sfBuilder->setParameter(
-                        $entryName,
-                        '%env(' . $diDefinition->getVariableName() . ')%'
-                    );
-
-                    continue;
-                } elseif ($diDefinition instanceof StringDefinition) {
-                    $this->sfBuilder->setParameter($entryName, $diDefinition->getExpression());
-
-                    continue;
-                } elseif ($diDefinition instanceof ValueDefinition) {
-                    $this->sfBuilder->setParameter($entryName, $diDefinition->getValue());
-
-                    continue;
-                } elseif ($diDefinition instanceof ArrayDefinition) {
-                    $this->sfBuilder->setParameter($entryName, $diDefinition->getValues());
-
-                    continue;
-                } else {
-                    continue;
-                }
+                continue;
             }
 
-            $definition = new Definition($className);
-            $definition->setFactory(new SfReference(Bridge::class));
-            $definition->setArguments([$entryName]);
-            $definition->setPublic(true);
-            $definitions[$entryName] = $definition;
+            $diDefinition = $this->extractDIDefinition($diContainer, $entryName);
+
+            $this->convertDefinition($diDefinition, $entryName, $definitions);
         }
 
         $this->sfBuilder->addDefinitions($definitions);

@@ -27,7 +27,6 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use Psr\Container\ContainerInterface;
-use Symfony\Component\DependencyInjection\Container as SfContainer;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
