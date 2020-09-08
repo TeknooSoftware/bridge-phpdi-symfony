@@ -70,7 +70,7 @@ class DIBridgeExtension extends Extension
         $configs = $this->processConfiguration($configuration, $configs);
 
         if (!empty($configs)) {
-            $this->initializePHPDI($configs[0], $container); //todo [0]
+            $this->initializePHPDI($configs, $container);
         }
 
         return $this;

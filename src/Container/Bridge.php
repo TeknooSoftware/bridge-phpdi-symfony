@@ -28,6 +28,7 @@ use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
@@ -96,7 +97,13 @@ class Bridge implements ContainerInterface
         $diContainer = $this->getDIContainer();
 
         if ($diContainer->has($id)) {
-            return $diContainer->get($id);
+            $object = $diContainer->get($id);
+
+            if ($object instanceof ContainerAwareInterface) {
+                $object->setContainer($this->sfContainer);
+            }
+
+            return $object;
         }
 
         throw new ServiceNotFoundException($id);

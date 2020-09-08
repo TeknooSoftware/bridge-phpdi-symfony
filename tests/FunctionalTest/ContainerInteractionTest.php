@@ -21,59 +21,27 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
  */
 class ContainerInteractionTest extends AbstractFunctionalTest
 {
-    /**
-     * @test Get a Symfony entry from PHP-DI's container
-     */
-    public function phpdiShouldGetEntriesFromSymfony()
+    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDI()
     {
+        //Class 2 is defined in Symfony
+        //Class 1 is defined in PHP DI
+        //Class 1 requires Class 2
+        //So PHPDI requires an entry from Symfony
+        //And Symfony Container must use PHPDI to get Class1
         $kernel = $this->createKernel('class2.yml');
 
-        /** @var SymfonyContainerBridge $container */
-        $container = $kernel->getContainer();
-        /** @var Container $phpdiContainer */
-        $phpdiContainer = $container->getFallbackContainer();
+        $class1 = $kernel->getContainer()->get(Class1::class);
 
-        $phpdiContainer->set(
-            'foo',
-            \DI\create(Class1::class)
-                ->constructor(\DI\get('class2'))
-        );
-
-        $class1 = $container->get('foo');
-
-        self::assertTrue($class1 instanceof Class1);
+        self::assertInstanceOf(Class1::class, $class1);
     }
 
-    /**
-     * @test Get a PHP-DI entry from Symfony's container
-     */
-    public function symfonyGetInPHPDI()
-    {
-        $kernel = $this->createKernel('class1.yml');
-
-        $class1 = $kernel->getContainer()->get('class1');
-
-        self::assertTrue($class1 instanceof Class1);
-    }
-
-    /**
-     * @test Alias a Symfony entry from PHP-DI's container
-     */
-    public function phpdiAliasesCanReferenceSymfonyEntries()
+    public function testPhpdiAliasesCanReferenceSymfonyEntries()
     {
         $kernel = $this->createKernel('class2.yml');
-
-        /** @var SymfonyContainerBridge $container */
         $container = $kernel->getContainer();
-        /** @var Container $phpdiContainer */
-        $phpdiContainer = $container->getFallbackContainer();
 
-        $ref = \DI\get('class2');
-        $ref->setName('foo');
-        $phpdiContainer->set('foo', $ref);
+        $class2 = $container->get('class2Alias');
 
-        $class2 = $container->get('foo');
-
-        self::assertTrue($class2 instanceof Class2);
+        self::assertInstanceOf(Class2::class, $class2);
     }
 }

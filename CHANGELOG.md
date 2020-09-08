@@ -5,6 +5,7 @@
 ###Remove
 - Symfony Kernel overloading
 - Symfony Container overloading
+- Autowiring of non registered class from PHP-DI. (Use Symfony's behavior instead).
 
 ###Change
 - This integrated is used as Symfony Bundle and not a Symfony Kernel overloading.

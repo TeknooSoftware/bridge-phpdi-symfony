@@ -1,3 +1,6 @@
+imports:
+     - { resource: 'di_bridge.yml' }
+
 services:
     class1:
         class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1

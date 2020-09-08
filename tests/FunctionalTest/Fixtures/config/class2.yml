@@ -1,3 +1,10 @@
+imports:
+    - { resource: 'di_bridge.yml' }
+
+di_bridge:
+    definitions:
+        - '%kernel.project_dir%/config/di_alias.php'
+
 services:
     class2:
         class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2

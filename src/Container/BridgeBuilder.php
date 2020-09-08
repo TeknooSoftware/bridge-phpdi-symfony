@@ -33,6 +33,7 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -148,7 +149,10 @@ class BridgeBuilder
             }
 
             $diDefinition = $container->extractDefinition($entryName);
-        } while ($diDefinition instanceof DIReference);
+        } while (
+            $diDefinition instanceof DIReference
+            && $this->sfBuilder->has($diDefinition->getTargetEntryName())
+        );
 
         if (!$diDefinition instanceof DIDefinition) {
             throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
@@ -196,6 +200,13 @@ class BridgeBuilder
                 $this->getClassFromFactory($diDefinition),
                 $entryName
             );
+
+            return;
+        }
+
+        if ($diDefinition instanceof DIReference) {
+            $alias = $this->sfBuilder->setAlias($entryName, $diDefinition->getTargetEntryName());
+            $alias->setPublic(true);
 
             return;
         }
