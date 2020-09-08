@@ -67,7 +67,7 @@ class DIBridgeExtension extends Extension
     public function load(array $configs, SymfonyContainerBuilder $container): self
     {
         $configuration = new Configuration();
-        $this->processConfiguration($configuration, $configs);
+        $configs = $this->processConfiguration($configuration, $configs);
 
         if (!empty($configs)) {
             $this->initializePHPDI($configs[0], $container); //todo [0]

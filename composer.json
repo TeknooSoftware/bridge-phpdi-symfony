@@ -1,25 +1,26 @@
 {
     "name": "teknoo/bridge-phpdi-symfony",
-    "type": "library",
     "description": "Integrates PHP-DI to Symfony, Fork from php-di/symfony-bridge",
-    "homepage": "http://php-di.org/doc/frameworks/symfony2.html",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Teknoo\\DI\\SymfonyBridge\\": "src/"
+    "type": "library",
+    "keywords": ["symfony", "phpdi", "di", "bridge"],
+    "homepage": "http://teknoo.software/bridge-phpdi-symfony",
+    "authors": [
+        {
+            "name": "Richard Déloge",
+            "email": "richarddeloge@gmail.com",
+            "role":"Software architect, Lead developer"
+        },
+        {
+            "name": "Matthieu Napoli",
+            "role":"Original author before fork"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Teknoo\\DI\\SymfonyBridge\\Test\\": "tests/"
-        }
-    },
+    ],
     "require": {
         "php": "~7.4",
         "php-di/php-di": "~6.0",
         "symfony/dependency-injection": "~4.4||~5.1",
         "symfony/http-kernel": "~4.4||~5.1",
-        "symfony/proxy-manager-bridge": "~4.4||~5.1",
         "symfony/config": "~4.4||~5.1"
     },
     "require-dev": {
@@ -33,5 +34,24 @@
         "symfony/filesystem": "~4.4||~5.1",
         "symfony/yaml": "~4.4||~5.1",
         "symfony/error-handler": "~4.4||~5.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Teknoo\\DI\\SymfonyBridge\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Teknoo\\DI\\SymfonyBridge\\Test\\": "tests/"
+        }
+    },
+    "archive": {
+        "exclude": ["features", "tests", "vendor", ".idea"]
+    },
+    "extra": {
+        "thanks": {
+            "name": "php-di/php-di",
+            "url": "https://github.com/PHP-DI/PHP-DI"
+        }
     }
 }

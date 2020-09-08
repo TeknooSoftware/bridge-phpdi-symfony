@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
-use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;

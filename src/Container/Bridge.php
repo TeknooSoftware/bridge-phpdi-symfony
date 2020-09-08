@@ -103,8 +103,8 @@ class Bridge implements ContainerInterface
     }
 
     /**
-     * Get Service bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are accessible only
-     * via getParameter, but in PHP-DI via the method "get" like other definition.
+     * Get Service bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are accessible
+     * only via getParameter, but in PHP-DI via the method "get" like other definition.
      *
      * @param string $id
      * @return mixed
@@ -130,8 +130,8 @@ class Bridge implements ContainerInterface
     }
 
     /**
-     * Service checking bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are accessible only
-     * via getParameter, but in PHP-DI via the method "get" like other definition.
+     * Service checking bridge used from PHP-DI's Definition to manage parameters access : In SF, Parameters are
+     * accessible only via getParameter, but in PHP-DI via the method "get" like other definition.
      *
      * @param string $id
      * @return bool
