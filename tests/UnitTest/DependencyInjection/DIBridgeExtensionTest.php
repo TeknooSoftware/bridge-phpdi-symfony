@@ -13,7 +13,6 @@
  *
  *
  * @copyright   Copyright (c) 2009-2020 Richard Déloge (richarddeloge@gmail.com)
- * @copyright Matthieu Napoli (http://mnapoli.fr/)
  *
  * @link        http://teknoo.software/di-symfony-bridge Project website
  *
@@ -23,23 +22,18 @@
 
 declare(strict_types=1);
 
-namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
+namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
-use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Kernel;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
+use Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension;
 
-abstract class AbstractFunctionalTest extends TestCase
+/**
+ * @covers \Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension
+ */
+class DIBridgeExtensionTest extends TestCase
 {
-    protected function createKernel($configFile = 'empty.yml')
+    public function buildInstance(): DIBridgeExtension
     {
-        // Clear the cache
-        $fs = new Filesystem();
-        $fs->remove(__DIR__ . '/Fixtures/cache/dev');
-
-        $kernel = new Kernel($configFile);
-        $kernel->boot();
-
-        return $kernel;
+        return new DIBridgeExtension();
     }
 }
