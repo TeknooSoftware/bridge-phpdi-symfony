@@ -7,10 +7,10 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT (see the LICENSE file)
  */
 
-namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest;
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
-use Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Class1;
-use Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Class2;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
 use Psr\Container\ContainerInterface;
 
 /**

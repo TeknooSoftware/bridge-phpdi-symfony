@@ -1,9 +1,9 @@
 <?php
 
 
-namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest;
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
-use Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Kernel;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 

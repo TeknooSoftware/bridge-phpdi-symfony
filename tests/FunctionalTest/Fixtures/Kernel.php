@@ -1,6 +1,6 @@
 <?php
 
-namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures;
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\HttpKernel\Kernel as SymfonyKernel;

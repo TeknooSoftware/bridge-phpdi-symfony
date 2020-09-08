@@ -1,5 +1,5 @@
 services:
     class1:
-        class: Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Class1
+        class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1
         public: true
-        arguments: [ '@Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Class2' ]
+        arguments: [ '@Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2' ]

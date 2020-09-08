@@ -1,4 +1,4 @@
 services:
     class2:
-        class: Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Class2
+        class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2
         public: true

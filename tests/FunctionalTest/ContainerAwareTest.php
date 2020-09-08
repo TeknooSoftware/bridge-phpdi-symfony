@@ -7,9 +7,9 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT (see the LICENSE file)
  */
 
-namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest;
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
-use Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\ContainerAwareController;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
 
 /**
  * @coversNothing

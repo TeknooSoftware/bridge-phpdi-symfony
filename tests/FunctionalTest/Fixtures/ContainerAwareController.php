@@ -1,6 +1,6 @@
 <?php
 
-namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures;
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
