@@ -36,6 +36,9 @@ use Teknoo\DI\SymfonyBridge\Container\Container;
  */
 class DIBridgeExtension extends Extension
 {
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
     {
         $builder = new BridgeBuilder(
@@ -58,6 +61,9 @@ class DIBridgeExtension extends Extension
         $builder->initializeSymfonyContainer();
     }
 
+    /**
+     * @param array<string, mixed> $configs
+     */
     public function load(array $configs, SymfonyContainerBuilder $container): self
     {
         $configuration = new Configuration();

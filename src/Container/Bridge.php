@@ -42,12 +42,22 @@ class Bridge implements ContainerInterface
 
     private SfContainer $sfContainer;
 
+    /**
+     * @var array<int, string>
+     */
     private array $definitionsFiles;
 
+    /**
+     * @var array<string, string>
+     */
     private array $definitionsImport;
 
     private ?DIContainer $diContainer = null;
 
+    /**
+     * @param array<int, string> $definitionsFiles
+     * @param array<string, string> $definitionsImport
+     */
     public function __construct(
         DIContainerBuilder $diBuilder,
         SfContainer $sfContainer,
@@ -86,7 +96,7 @@ class Bridge implements ContainerInterface
         $diContainer = $this->getDIContainer();
 
         if ($diContainer->has($id)) {
-            return $this->diContainer->get($id);
+            return $diContainer->get($id);
         }
 
         throw new ServiceNotFoundException($id);
@@ -109,7 +119,7 @@ class Bridge implements ContainerInterface
 
         $diContainer = $this->getDIContainer();
         if ($diContainer->has($id)) {
-            return $this->diContainer->get($id);
+            return $diContainer->get($id);
         }
 
         if ($this->sfContainer->hasParameter($id)) {

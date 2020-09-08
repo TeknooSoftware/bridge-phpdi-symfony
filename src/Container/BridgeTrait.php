@@ -34,6 +34,10 @@ use Psr\Container\ContainerInterface;
  */
 trait BridgeTrait
 {
+    /**
+     * @param array<int, string> $definitionsFiles
+     * @param array<string, string> $definitionsImport
+     */
     private function buildContainer(
         DIContainerBuilder $diBuilder,
         ContainerInterface $wrapContainer,

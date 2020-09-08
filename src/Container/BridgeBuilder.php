@@ -36,6 +36,8 @@ use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 
 /**
@@ -50,8 +52,14 @@ class BridgeBuilder
 
     private SfContainerBuilder $sfBuilder;
 
+    /**
+     * @var array<string, bool>
+     */
     private array $definitionsFiles = [];
 
+    /**
+     * @var array<string, string>
+     */
     private array $definitionsImport = [];
 
     public function __construct(DIContainerBuilder $diBuilder, SfContainerBuilder $sfBuilder)
@@ -60,6 +68,10 @@ class BridgeBuilder
         $this->sfBuilder = $sfBuilder;
     }
 
+    /**
+     * @param array<int, string> $definitions
+     * @return $this
+     */
     public function loadDefinition(array $definitions): self
     {
         foreach ($definitions as &$definition) {
@@ -117,6 +129,9 @@ class BridgeBuilder
         return $definition;
     }
 
+    /**
+     * @param mixed $value
+     */
     private function setParameter(string $parameterName, $value): void
     {
         $this->sfBuilder->setParameter(
@@ -125,7 +140,7 @@ class BridgeBuilder
         );
     }
 
-    private function extractDIDefinition(DIContainer $container, string $entryName): DIDefinition
+    private function extractDIDefinition(Container $container, string $entryName): DIDefinition
     {
         $diDefinition = null;
         do {
@@ -135,6 +150,10 @@ class BridgeBuilder
 
             $diDefinition = $container->extractDefinition($entryName);
         } while ($diDefinition instanceof DIReference);
+
+        if (!$diDefinition instanceof DIDefinition) {
+            throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
+        }
 
         return $diDefinition;
     }
@@ -148,18 +167,23 @@ class BridgeBuilder
             //Invokable object
             $reflectionObject = new \ReflectionObject($callable);
             $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif(\is_array($callable)) {
+        } elseif (\is_array($callable)) {
             //Callable is a public method from object
             $reflectionObject = new \ReflectionObject($callable[0]);
             $reflectionMethod = $reflectionObject->getMethod($callable[1]);
-        } else {
+        } elseif ($callable instanceof \Closure || \is_string($callable)) {
             //Is internal function or a closure
             $reflectionMethod = new \ReflectionFunction($callable);
+        } else {
+            throw new RuntimeException('Callable not supported');
         }
 
         return (string) $reflectionMethod->getReturnType();
     }
 
+    /**
+     * @param array<string, SfDefinition> $definitions
+     */
     private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
     {
         if ($diDefinition instanceof ObjectDefinition) {
