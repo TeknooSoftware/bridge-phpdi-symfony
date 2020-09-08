@@ -24,9 +24,11 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 
+use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 
 /**
@@ -75,5 +77,18 @@ class BridgeTest extends TestCase
                 'hello' => 'world'
             ]
         );
+    }
+
+    public function testInvokeNotFound()
+    {
+        $this->expectException(ServiceNotFoundException::class);
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($this->createMock(DIContainer::class));
+
+        $bridge = $this->buildInstance();
+        $bridge('foo');
     }
 }

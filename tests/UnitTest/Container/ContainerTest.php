@@ -33,7 +33,7 @@ use Teknoo\DI\SymfonyBridge\Container\Container;
  */
 class ContainerTest extends TestCase
 {
-    private ?MutableDefinitionSource $originalDefinitions;
+    private ?MutableDefinitionSource $originalDefinitions = null;
 
     /**
      * @return MutableDefinitionSource|\PHPUnit\Framework\MockObject\MockObject
@@ -52,5 +52,10 @@ class ContainerTest extends TestCase
         return new Container(
             $this->getMutableDefinitionSourceMock()
         );
+    }
+
+    public function testExtractDefinitionWhenNoThereAreNoSource()
+    {
+        self::assertNull($this->buildInstance()->extractDefinition('foo'));
     }
 }

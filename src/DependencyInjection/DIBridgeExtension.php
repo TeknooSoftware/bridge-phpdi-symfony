@@ -36,12 +36,20 @@ use Teknoo\DI\SymfonyBridge\Container\Container;
  */
 class DIBridgeExtension extends Extension
 {
+    private string $bridgeBuilderClass;
+
+    public function __construct(string $bridgeBuilderClass = BridgeBuilder::class)
+    {
+        $this->bridgeBuilderClass = $bridgeBuilderClass;
+    }
+
     /**
      * @param array<string, mixed> $configuration
      */
     private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
     {
-        $builder = new BridgeBuilder(
+        $bridgeBuilderClass = $this->bridgeBuilderClass;
+        $builder = new $bridgeBuilderClass(
             new DIContainerBuilder(Container::class),
             $container
         );

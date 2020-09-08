@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Teknoo\DI\SymfonyBridge\DependencyInjection\Configuration;
 
 /**
@@ -35,5 +36,15 @@ class ConfigurationTest extends TestCase
     public function buildInstance(): Configuration
     {
         return new Configuration();
+    }
+
+    public function testGetConfigTreeBuilder()
+    {
+        $treeBuilder = $this->buildInstance()->getConfigTreeBuilder();
+
+        self::assertInstanceOf(
+            TreeBuilder::class,
+            $treeBuilder
+        );
     }
 }

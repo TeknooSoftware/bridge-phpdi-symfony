@@ -36,7 +36,7 @@ class BridgeBuilderTest extends TestCase
 {
     private ?DIContainerBuilder $diBuilder = null;
 
-    private ?SfContainer $sfContainer = null;
+    private ?SfContainerBuilder $sfContainer = null;
 
     /**
      * @return DIContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
@@ -67,6 +67,14 @@ class BridgeBuilderTest extends TestCase
         return new BridgeBuilder(
             $this->getDiBuilderMock(),
             $this->getSfContainerBuilderMock()
-        )
+        );
+    }
+
+    public function testLoadDefinition()
+    {
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()->loadDefinition(['foo', 'bar'])
+        );
     }
 }
