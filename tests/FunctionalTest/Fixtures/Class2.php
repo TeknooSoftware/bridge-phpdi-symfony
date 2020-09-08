@@ -1,6 +1,6 @@
 <?php
 
-namespace DI\Bridge\Symfony\Test\FunctionalTest\Fixtures;
+namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures;
 
 class Class2
 {

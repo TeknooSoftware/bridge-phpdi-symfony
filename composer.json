@@ -42,7 +42,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Teknoo\\DI\\SymfonyBridge\\Test\\": "tests/"
+            "Teknoo\\Tests\\DI\\SymfonyBridge\\": "tests/"
         }
     },
     "archive": {

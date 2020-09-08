@@ -1,9 +1,9 @@
 <?php
 
 
-namespace DI\Bridge\Symfony\Test\FunctionalTest;
+namespace Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest;
 
-use DI\Bridge\Symfony\Test\FunctionalTest\Fixtures\AppKernel;
+use Teknoo\Tests\DI\Bridge\Symfony\FunctionalTest\Fixtures\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -15,7 +15,7 @@ abstract class AbstractFunctionalTest extends TestCase
         $fs = new Filesystem();
         $fs->remove(__DIR__ . '/Fixtures/cache/dev');
 
-        $kernel = new AppKernel($configFile);
+        $kernel = new Kernel($configFile);
         $kernel->boot();
 
         return $kernel;
