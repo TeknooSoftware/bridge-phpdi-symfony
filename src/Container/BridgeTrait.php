@@ -37,11 +37,11 @@ trait BridgeTrait
 {
     private function buildContainer(
         DIContainerBuilder $diBuilder,
-        SfContainer $sfContainer,
+        ContainerInterface $wrapContainer,
         array $definitionsFiles,
         array $definitionsImport
     ): DIContainer {
-        $diBuilder->wrapContainer($sfContainer);
+        $diBuilder->wrapContainer($wrapContainer);
 
         foreach ($definitionsFiles as $definitionFile) {
             $diBuilder->addDefinitions($definitionFile);

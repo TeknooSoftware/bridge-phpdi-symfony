@@ -26,6 +26,7 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
+use DI\Definition\EnvironmentVariableDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
@@ -139,6 +140,13 @@ class BridgeBuilder
 
                     $rt = $rm->getReturnType();
                     $className = (string) $rt;
+                } elseif ($diDefinition instanceof EnvironmentVariableDefinition) {
+                    $this->sfBuilder->setParameter(
+                        $entryName,
+                        '%env(' . $diDefinition->getVariableName() . ')%'
+                    );
+
+                    continue;
                 } elseif ($diDefinition instanceof StringDefinition) {
                     $this->sfBuilder->setParameter($entryName, $diDefinition->getExpression());
 
@@ -159,6 +167,7 @@ class BridgeBuilder
             $definition = new Definition($className);
             $definition->setFactory(new SfReference(Bridge::class));
             $definition->setArguments([$entryName]);
+            $definition->setPublic(true);
             $definitions[$entryName] = $definition;
         }
 

@@ -26,13 +26,17 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Bridge
+class Bridge implements ContainerInterface
 {
     use BridgeTrait;
 
@@ -66,7 +70,7 @@ class Bridge
 
         return $this->diContainer = $this->buildContainer(
             $this->diBuilder,
-            $this->sfContainer,
+            $this,
             $this->definitionsFiles,
             $this->definitionsImport
         );
@@ -75,5 +79,29 @@ class Bridge
     public function __invoke($id)
     {
         return $this->getDIContainer()->get($id);
+    }
+
+    public function get($id)
+    {
+        if ($this->sfContainer->has($id)) {
+            return $this->sfContainer->get($id);
+        }
+
+        $diContainer = $this->getDIContainer();
+        if ($diContainer->has($id)) {
+            return $this->diContainer->get($id);
+        }
+
+        throw new ServiceNotFoundException($id);
+    }
+
+    public function has($id)
+    {
+        if ($this->sfContainer->has($id)) {
+            return true;
+        }
+
+        $diContainer = $this->getDIContainer();
+        return $diContainer->has($id);
     }
 }
