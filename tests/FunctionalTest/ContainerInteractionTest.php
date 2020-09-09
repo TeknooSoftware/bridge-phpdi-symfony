@@ -27,6 +27,7 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
 
 /**
  * Tests interactions between containers, i.e. entries that reference other entries in
@@ -58,5 +59,19 @@ class ContainerInteractionTest extends AbstractFunctionalTest
         $class2 = $container->get('class2Alias');
 
         self::assertInstanceOf(Class2::class, $class2);
+    }
+
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImport()
+    {
+        //Class 2 is defined in Symfony
+        //Class 3 is defined in PHP DI
+        //Class 3 requires Class 2 from alias defined in import 'class2_import'
+        //So PHPDI requires an entry from Symfony
+        //And Symfony Container must use PHPDI to get Class1
+        $kernel = $this->createKernel('class2.yml');
+
+        $class1 = $kernel->getContainer()->get(Class3::class);
+
+        self::assertInstanceOf(Class3::class, $class1);
     }
 }

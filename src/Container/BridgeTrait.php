@@ -28,6 +28,8 @@ use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use Psr\Container\ContainerInterface;
 
+use function DI\get;
+
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
@@ -52,9 +54,7 @@ trait BridgeTrait
 
         $imports = [];
         foreach ($definitionsImport as $diKey => $sfKey) {
-            $imports[$diKey] = static function (ContainerInterface $container) use ($sfKey) {
-                return $container->get($sfKey);
-            };
+            $imports[$diKey] = get($sfKey);
         }
         $diBuilder->addDefinitions($imports);
 

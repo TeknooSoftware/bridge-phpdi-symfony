@@ -4,6 +4,8 @@ imports:
 di_bridge:
     definitions:
         - '%kernel.project_dir%/config/di_alias.php'
+    import:
+        class2_import: class2
 
 services:
     class2:
