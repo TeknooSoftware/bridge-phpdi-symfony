@@ -142,6 +142,7 @@ class BridgeBuilder
 
     private function extractDIDefinition(Container $container, string $entryName): DIDefinition
     {
+        $diReference = null;
         $diDefinition = null;
         do {
             if ($diDefinition instanceof DIReference) {
@@ -149,16 +150,19 @@ class BridgeBuilder
             }
 
             $diDefinition = $container->extractDefinition($entryName);
-        } while (
-            $diDefinition instanceof DIReference
-            && $this->sfBuilder->has($diDefinition->getTargetEntryName())
-        );
 
-        if (!$diDefinition instanceof DIDefinition) {
+            //Symfony container passed is not fully completed (tmp container), so if the reference was not found,
+            //returns the last reference, it will be resolved at runing time
+            if ($diDefinition instanceof DIReference) {
+                $diReference = $diDefinition;
+            }
+        } while ($diDefinition instanceof DIReference);
+
+        if (!$diDefinition instanceof DIDefinition && !$diReference instanceof DIReference) {
             throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
         }
 
-        return $diDefinition;
+        return $diDefinition ?? $diReference;
     }
 
     private function getClassFromFactory(FactoryDefinition $definition): string
@@ -181,7 +185,12 @@ class BridgeBuilder
             throw new RuntimeException('Callable not supported');
         }
 
-        return (string) $reflectionMethod->getReturnType();
+        $returnType = $reflectionMethod->getReturnType();
+        if (!$returnType instanceof \ReflectionNamedType) {
+            throw new RuntimeException('This bridge supports only \ReflectionNamedType from Reflection');
+        }
+
+        return (string) $returnType->getName();
     }
 
     /**
