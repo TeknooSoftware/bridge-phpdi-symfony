@@ -71,11 +71,33 @@ class BridgeBuilderTest extends TestCase
         );
     }
 
+    public function testLoadDefinitionWithBadArgument()
+    {
+        $this->expectException(\TypeError::class);
+
+        $this->buildInstance()->loadDefinition(new \stdClass());
+    }
+
     public function testLoadDefinition()
     {
         self::assertInstanceOf(
             BridgeBuilder::class,
             $this->buildInstance()->loadDefinition(['foo', 'bar'])
+        );
+    }
+
+    public function testImportWithBadArgument()
+    {
+        $this->expectException(\TypeError::class);
+
+        $this->buildInstance()->import(new \stdClass(), new \stdClass());
+    }
+
+    public function testImport()
+    {
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()->import('foo', 'bar')
         );
     }
 }
