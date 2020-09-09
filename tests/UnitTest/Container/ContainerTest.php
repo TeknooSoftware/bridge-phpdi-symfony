@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 
+use DI\Definition\Definition;
+use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 use PHPUnit\Framework\TestCase;
 use Teknoo\DI\SymfonyBridge\Container\Container;
@@ -54,8 +56,34 @@ class ContainerTest extends TestCase
         );
     }
 
-    public function testExtractDefinitionWhenNoThereAreNoSource()
+    public function testExtractDefinitionWithBadArgument()
     {
+        $this->expectException(\TypeError::class);
+        $this->buildInstance()->extractDefinition(new \stdClass());
+    }
+
+    public function testExtractDefinitionWhenDefinitionsInjected()
+    {
+        self::assertNull((new Container())->extractDefinition('foo'));
+    }
+
+    public function testExtractDefinitionWhenNoThereAreNotFound()
+    {
+        $this->getMutableDefinitionSourceMock()
+            ->expects(self::any())
+            ->method('getDefinition')
+            ->willThrowException(new InvalidDefinition());
+
         self::assertNull($this->buildInstance()->extractDefinition('foo'));
+    }
+
+    public function testExtractDefinition()
+    {
+        $this->getMutableDefinitionSourceMock()
+            ->expects(self::any())
+            ->method('getDefinition')
+            ->willReturn($this->createMock(Definition::class));
+
+        self::assertInstanceOf(Definition::class, $this->buildInstance()->extractDefinition('foo'));
     }
 }

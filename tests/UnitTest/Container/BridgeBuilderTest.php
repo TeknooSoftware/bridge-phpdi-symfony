@@ -31,6 +31,7 @@ use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 
 /**
  * @covers \Teknoo\DI\SymfonyBridge\Container\BridgeBuilder
+ * @covers \Teknoo\DI\SymfonyBridge\Container\BridgeTrait
  */
 class BridgeBuilderTest extends TestCase
 {
