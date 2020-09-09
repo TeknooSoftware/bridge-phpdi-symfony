@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\ContainerBuilder as DIContainerBuilder;
-use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
 use DI\Definition\Definition as DIDefinition;
 use DI\Definition\FactoryDefinition;
@@ -33,7 +32,6 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
-use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -234,12 +232,6 @@ class BridgeBuilder
 
         if ($diDefinition instanceof ValueDefinition) {
             $this->setParameter($entryName, $diDefinition->getValue());
-
-            return;
-        }
-
-        if ($diDefinition instanceof ArrayDefinition) {
-            $this->setParameter($entryName, $diDefinition->getValues());
 
             return;
         }

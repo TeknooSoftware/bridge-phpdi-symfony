@@ -26,7 +26,6 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
-use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
@@ -37,7 +36,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
-use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
@@ -234,10 +232,9 @@ class BridgeBuilderTest extends TestCase
                 'entryAboutEnvironment',
                 'entryAboutString',
                 'entryAboutValue',
-                'entryAboutArray',
             ]);
 
-        $container->expects(self::exactly(12))
+        $container->expects(self::exactly(11))
             ->method('extractDefinition')
             ->willReturnMap([
                 [\DateTime::class, (new ObjectDefinition(\DateTime::class, \DateTime::class))],
@@ -278,10 +275,6 @@ class BridgeBuilderTest extends TestCase
                     'entryAboutValue',
                     (new ValueDefinition('value'))
                 ],
-                [
-                    'entryAboutArray',
-                    (new ArrayDefinition(['value']))
-                ],
             ]);
 
         $this->getDiBuilderMock()
@@ -296,7 +289,7 @@ class BridgeBuilderTest extends TestCase
             ->willReturn($this->createMock(Alias::class));
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::exactly(4))
+            ->expects(self::exactly(3))
             ->method('setParameter')
             ->withConsecutive(
                 [
@@ -310,10 +303,6 @@ class BridgeBuilderTest extends TestCase
                 [
                     'entryAboutValue',
                     'value',
-                ],
-                [
-                    'entryAboutArray',
-                    ['value'],
                 ],
             );
 
