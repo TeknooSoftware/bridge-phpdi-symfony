@@ -3,3 +3,6 @@ parameters:
         -
             message: '#Call to an undefined method [a-zA-Z0-9\\_]+::children\(\)#'
             path: src/DependencyInjection/Configuration.php
+        -
+            message: '#Method [a-zA-Z0-9\\_]+::extractDIDefinition\(\) should return [a-zA-Z0-9\\_]+ but returns [a-zA-Z0-9\\_]+\|null#'
+            path: src/Container/BridgeBuilder.php

@@ -158,11 +158,11 @@ class BridgeBuilder
             }
         } while ($diDefinition instanceof DIReference);
 
-        if (!$diDefinition instanceof DIDefinition && !$diReference instanceof DIReference) {
-            throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
+        if ($diDefinition instanceof DIDefinition || $diReference instanceof DIReference) {
+            return $diDefinition ?? $diReference;
         }
 
-        return $diDefinition ?? $diReference;
+        throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
     }
 
     private function getClassFromFactory(FactoryDefinition $definition): string
@@ -170,15 +170,15 @@ class BridgeBuilder
         $callable = $definition->getCallable();
 
         $reflectionMethod = null;
-        if (!$callable instanceof \Closure && \is_object($callable)) {
+        if (!$callable instanceof \Closure && \is_object($callable) && \is_callable($callable)) {
             //Invokable object
             $reflectionObject = new \ReflectionObject($callable);
             $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (\is_array($callable)) {
+        } elseif (\is_array($callable) && \is_callable($callable)) {
             //Callable is a public method from object
             $reflectionObject = new \ReflectionObject($callable[0]);
             $reflectionMethod = $reflectionObject->getMethod($callable[1]);
-        } elseif ($callable instanceof \Closure || \is_string($callable)) {
+        } elseif ($callable instanceof \Closure || (\is_string($callable) && \is_callable($callable))) {
             //Is internal function or a closure
             $reflectionMethod = new \ReflectionFunction($callable);
         } else {

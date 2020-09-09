@@ -37,6 +37,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
@@ -126,6 +128,88 @@ class BridgeBuilderTest extends TestCase
             ->willReturn($container);
 
         $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerWithNotFoundEntry()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $container = $this->createMock(Container::class);
+        $container->expects(self::any())
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryNotFound',
+            ]);
+
+        $container->expects(self::any())
+            ->method('extractDefinition')
+            ->willReturn(null);
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderMock()
+            ->expects(self::never())
+            ->method('addDefinitions');
+
+        $this->expectException(ServiceNotFoundException::class);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->initializeSymfonyContainer()
+        );
+    }
+
+
+    public function testInitializeSymfonyContainerWithNotSupportedCallableFactory()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $container = $this->createMock(Container::class);
+        $container->expects(self::any())
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryNotSupportedFactory',
+            ]);
+
+        $container->expects(self::any())
+            ->method('extractDefinition')
+            ->willReturn(
+                (new FactoryDefinition(
+                    'entryAboutFactoryInvokable',
+                    'foo'
+                ))
+            );
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderMock()
+            ->expects(self::never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->initializeSymfonyContainer()
+        );
     }
 
     public function testInitializeSymfonyContainer()
