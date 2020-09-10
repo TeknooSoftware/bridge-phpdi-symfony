@@ -280,7 +280,20 @@ class BridgeBuilderTest extends TestCase
                 ],
                 [
                     'entryAboutArray',
-                    (new ArrayDefinition(['value']))
+                    (new ArrayDefinition(
+                        [
+                            'key1' => 'value1',
+                            'key2' => [
+                                'key3' => 'value2',
+                                'key4' => 'value3',
+                            ],
+                            'key5' => new ArrayDefinition([
+                                'key6' => new ArrayDefinition([
+                                    'key7' => 'value4',
+                                ]),
+                            ]),
+                        ]
+                    ))
                 ],
             ]);
 
@@ -313,7 +326,18 @@ class BridgeBuilderTest extends TestCase
                 ],
                 [
                     'entryAboutArray',
-                    ['value'],
+                    [
+                        'key1' => 'value1',
+                        'key2' => [
+                            'key3' => 'value2',
+                            'key4' => 'value3',
+                        ],
+                        'key5' => [
+                            'key6' => [
+                                'key7' => 'value4',
+                            ],
+                        ],
+                    ],
                 ],
             );
 

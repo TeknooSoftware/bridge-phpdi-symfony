@@ -33,7 +33,6 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
-use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -194,6 +193,24 @@ class BridgeBuilder
     }
 
     /**
+     * @param array<int|string, mixed> $array
+     * @return array<int|string, mixed>
+     */
+    private function convertArrayDefinition(array $array): array
+    {
+        $final = [];
+        foreach ($array as $key => &$value) {
+            if ($value instanceof ArrayDefinition) {
+                $final[$key] = $this->convertArrayDefinition($value->getValues());
+            } else {
+                $final[$key] = $value;
+            }
+        }
+
+        return $final;
+    }
+
+    /**
      * @param array<string, SfDefinition> $definitions
      */
     private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
@@ -239,7 +256,7 @@ class BridgeBuilder
         }
 
         if ($diDefinition instanceof ArrayDefinition) {
-            $this->setParameter($entryName, $diDefinition->getValues());
+            $this->setParameter($entryName, $this->convertArrayDefinition($diDefinition->getValues()));
 
             return;
         }

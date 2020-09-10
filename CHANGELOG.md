@@ -1,5 +1,10 @@
 #Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+##[4.0.0-beta4] - 2020-09-10
+##Beta Release
+###Fix
+- Fix transposition of Array parameters from PHPDI to Symfony (Recursive conversion of ArrayDefinition to array)
+
 ##[4.0.0-beta3] - 2020-09-09
 ##Beta Release
 ###Update
