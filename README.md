@@ -18,6 +18,28 @@ PHP-DI factory.
 They will directly call the Symfony Container instead of PHP-DI, The bridge will also automatically manage the management  
 of the parameters, managed differently by Symfony.
 
+Install this bridge
+-------------------
+
+**If you use a previous version of PHP-DI Bridge, remove PHP-DI Kernel overload and use the default kernel**
+
+* Add to you `bundles.php` file 
+
+        Teknoo\DI\SymfonyBridge\DIBridgeBundle::class => ['all' => true],
+
+* Create the file `di_bridge.yaml` in your config folder and put in
+
+        di_bridge:
+              definitions:
+                - 'list of PHP-DI definitions file, you can use Symfony joker like %kernel.project_dir%'
+                #example
+                - '%kernel.project_dir%/vendor/editor_name/package_name/src/di.php'
+                - '%kernel.project_dir%/config/di.php'
+              import:
+                #To make alias from SF entries into PHPDI
+                My\Class\Name: 'symfony.contaner.entry.name'
+
+
 Support this project
 ---------------------
 
