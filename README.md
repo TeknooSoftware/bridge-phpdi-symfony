@@ -9,7 +9,7 @@ Teknoo Software - PHP-DI integration with Symfony
 [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://github.com/phpstan/phpstan)
 
 This package provides integration for PHP-DI with Symfony. [PHP-DI](http://php-di.org) is a dependency injection container for PHP.
-This bridge works as Symfony Bundle to integrate PHP-DI into the Symfony Container as factory for entries defined into PHP-DI.
+This bridge works as Symfony Bundle to integrate PHP-DI, into the Symfony Container, as factory for entries defined into PHP-DI.
 Unlike the official bridge, this bridge does not require to use a custom version of Symfony's Kernel, neither a custom version of
 Symfony's container.
 During Symfony container's compilation, all entries in PHP-DI will be referenced into Symfony's Container.
