@@ -1,5 +1,10 @@
 #Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+##[4.0.1] - 2020-09-1!
+##Stable Release
+###Fix
+- Fix Configurator when there are several di_bridge.import in the configuration 
+
 ##[4.0.0] - 2020-09-10
 ##Stable Release
 ###First Release

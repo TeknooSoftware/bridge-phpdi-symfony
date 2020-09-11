@@ -43,6 +43,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarPrototype()->end()
             ->end() // definitions
             ->arrayNode('import')
+                ->useAttributeAsKey('name')
                 ->scalarPrototype()->end()
             ->end() //import
         ->end();
