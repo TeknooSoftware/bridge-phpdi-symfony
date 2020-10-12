@@ -168,7 +168,6 @@ class BridgeBuilderTest extends TestCase
         );
     }
 
-
     public function testInitializeSymfonyContainerWithNotSupportedCallableFactory()
     {
         $definitionsFiles = [
@@ -189,6 +188,49 @@ class BridgeBuilderTest extends TestCase
                 (new FactoryDefinition(
                     'entryAboutFactoryInvokable',
                     'foo'
+                ))
+            );
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderMock()
+            ->expects(self::never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithNotSupportedReflectionType()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $container = $this->createMock(Container::class);
+        $container->expects(self::any())
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryNotSupportedFactory',
+            ]);
+
+        $container->expects(self::any())
+            ->method('extractDefinition')
+            ->willReturn(
+                (new FactoryDefinition(
+                    'entryAboutFactoryInvokable',
+                    function () {}
                 ))
             );
 
