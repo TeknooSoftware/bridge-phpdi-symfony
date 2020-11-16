@@ -1,10 +1,10 @@
 {
     "name": "teknoo/bridge-phpdi-symfony",
-    "description": "Userfriendly integration of PHP-DI with Symfony, Fork from php-di/symfony-bridge",
-    "license": "MIT",
     "type": "library",
+    "description": "Userfriendly integration of PHP-DI with Symfony, Fork from php-di/symfony-bridge",
     "keywords": ["symfony", "phpdi", "di", "bridge"],
     "homepage": "http://teknoo.software/bridge-phpdi-symfony",
+    "license": "MIT",
     "authors": [
         {
             "name": "Richard Déloge",
@@ -14,6 +14,16 @@
         {
             "name": "Matthieu Napoli",
             "role":"Original author before fork"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/TeknooSoftware/symfony-bridge/issues",
+        "source": "https://github.com/TeknooSoftware/symfony-bridge"
+    },
+    "funding": [
+        {
+            "type": "patreon",
+            "url": "https://www.patreon.com/teknoo_software"
         }
     ],
     "require": {
