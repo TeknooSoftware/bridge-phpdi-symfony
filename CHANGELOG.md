@@ -1,5 +1,16 @@
 #Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+##[4.1.0] - 2021-01-24
+###Stable Release
+- Add support of PHP-DI's compilation, disable by default
+- Add support of PHP-DI's cache, disable by default
+- Create `Teknoo\DI\SymfonyBridge\Container\CompiledContainer` to wrap a compiled PHP-DI Container to use in Symfony
+- Create `Teknoo\DI\SymfonyBridge\Container\ContainerInterface`, implemented by `Container` and `CompiledContainer` to 
+  abstract them into the bridge.
+- Adapt `Bridge`, and `BridgeBuilder` to use `CompiledContainer`
+- Add Symfony option `di_bridge.compilation_path`
+- Add Symfony option `di_bridge.enable_cache`
+
 ##[4.0.4] - 2020-12-03
 ###Stable Release
 - Official Support of PHP8

@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
-use DI\Container as DIContainer;
+use DI\CompiledContainer as DIContainer;
 use DI\Definition\Source\MutableDefinitionSource;
 use DI\Proxy\ProxyFactory;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
@@ -34,7 +34,7 @@ use Psr\Container\ContainerInterface as PsrContainerInterface;
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Container extends DIContainer implements ContainerInterface
+class CompiledContainer extends DIContainer implements ContainerInterface
 {
     use ContainerDefinitionTrait;
 

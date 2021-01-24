@@ -55,6 +55,18 @@ class DIBridgeExtension extends Extension
             $container
         );
 
+        if (!empty($configuration['compilation_path'])) {
+            $builder->prepareCompilation(
+                $configuration['compilation_path']
+            );
+        }
+
+        if (isset($configuration['enable_cache'])) {
+            $builder->enableCache(
+                !empty($configuration['enable_cache'])
+            );
+        }
+
         if ($configuration['definitions']) {
             $builder->loadDefinition(
                 $configuration['definitions']

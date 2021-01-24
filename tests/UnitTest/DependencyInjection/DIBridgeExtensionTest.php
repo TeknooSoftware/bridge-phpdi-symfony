@@ -63,6 +63,22 @@ class DIBridgeExtensionTest extends TestCase
         );
     }
 
+    public function testLoadWithDefinitionsAndImportWithDefaultValues()
+    {
+        self::assertInstanceOf(
+            DIBridgeExtension::class,
+            $this->buildInstance()->load(
+                [
+                    [
+                        'definitions' => ['foo', 'bar'],
+                        'import' => ['hello' => 'world'],
+                    ]
+                ],
+                $this->getContainerBuilderMock()
+            )
+        );
+    }
+
     public function testLoadWithDefinitionsAndImport()
     {
         self::assertInstanceOf(
@@ -70,6 +86,8 @@ class DIBridgeExtensionTest extends TestCase
             $this->buildInstance()->load(
                 [
                     [
+                        'compilation_path' => '/foo/bar',
+                        'enable_cache' => true,
                         'definitions' => ['foo', 'bar'],
                         'import' => ['hello' => 'world'],
                     ]

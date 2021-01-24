@@ -102,6 +102,36 @@ class BridgeBuilderTest extends TestCase
         );
     }
 
+    public function testprepareCompilationWithBadArgument()
+    {
+        $this->expectException(\TypeError::class);
+
+        $this->buildInstance()->prepareCompilation(new \stdClass());
+    }
+
+    public function testprepareCompilation()
+    {
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()->prepareCompilation('foo')
+        );
+    }
+
+    public function testenableCacheWithBadArgument()
+    {
+        $this->expectException(\TypeError::class);
+
+        $this->buildInstance()->enableCache(new \stdClass());
+    }
+
+    public function testenableCache()
+    {
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()->enableCache(true)
+        );
+    }
+
     public function testImportWithBadArgument()
     {
         $this->expectException(\TypeError::class);
@@ -255,13 +285,11 @@ class BridgeBuilderTest extends TestCase
         );
     }
 
-    public function testInitializeSymfonyContainer()
-    {
-        $definitionsFiles = [
-            'foo',
-            'bar'
-        ];
-
+    private function prepareForInitializeSymfonyContainerTests(
+        array $definitionsFiles,
+        ?string $compilationPath,
+        bool $enableCache
+    ) {
         $container = $this->createMock(Container::class);
         $container->expects(self::any())
             ->method('getKnownEntryNames')
@@ -396,7 +424,9 @@ class BridgeBuilderTest extends TestCase
                             new SfReference(DIContainerBuilder::class),
                             new SfReference('service_container'),
                             $definitionsFiles,
-                            ['hello' => 'world']
+                            ['hello' => 'world'],
+                            $compilationPath,
+                            $enableCache
                         ]
                     ),
                     \DateTimeInterface::class => (new SfDefinition(\DateTimeInterface::class))
@@ -429,12 +459,60 @@ class BridgeBuilderTest extends TestCase
                         ->setPublic(true),
                 ]
             );
+    }
+
+    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, null, false);
 
         self::assertInstanceOf(
             BridgeBuilder::class,
             $this->buildInstance()
                 ->loadDefinition($definitionsFiles)
                 ->import('hello', 'world')
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithCacheAndNoCompilation()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, null, true);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->enableCache(true)
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithNoCacheAndCompilation()
+    {
+        $definitionsFiles = [
+            'foo',
+            'bar'
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, '/foo/bar', false);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->prepareCompilation('/foo/bar')
                 ->initializeSymfonyContainer()
         );
     }

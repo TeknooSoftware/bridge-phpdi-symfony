@@ -25,30 +25,28 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
-use DI\Container as DIContainer;
+use DI\Definition\Definition;
+use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
-use DI\Proxy\ProxyFactory;
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Container extends DIContainer implements ContainerInterface
+trait ContainerDefinitionTrait
 {
-    use ContainerDefinitionTrait;
+    private ?MutableDefinitionSource $originalDefinitions;
 
-    public function __construct(
-        ?MutableDefinitionSource $definitionSource = null,
-        ?ProxyFactory $proxyFactory = null,
-        ?PsrContainerInterface $wrapperContainer = null
-    ) {
-        parent::__construct(
-            $definitionSource,
-            $proxyFactory,
-            $wrapperContainer
-        );
+    public function extractDefinition(string $name): ?Definition
+    {
+        if (null === $this->originalDefinitions) {
+            return null;
+        }
 
-        $this->originalDefinitions = $definitionSource;
+        try {
+            return $this->originalDefinitions->getDefinition($name);
+        } catch (InvalidDefinition $error) {
+            return null;
+        }
     }
 }

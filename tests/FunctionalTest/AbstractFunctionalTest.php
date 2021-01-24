@@ -32,11 +32,32 @@ use Symfony\Component\Filesystem\Filesystem;
 
 abstract class AbstractFunctionalTest extends TestCase
 {
-    protected function createKernel($configFile = 'empty.yml')
+    protected static function clearCache()
     {
         // Clear the cache
         $fs = new Filesystem();
-        $fs->remove(__DIR__ . '/Fixtures/cache/dev');
+        $fs->remove(__DIR__ . '/Fixtures/var/cache/dev');
+        $fs->remove(__DIR__ . '/Fixtures/var/cache/phpdi');
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        static::clearCache();
+        parent::tearDownAfterClass();
+    }
+
+    public static function setUpBeforeClass(): void
+    {
+        static::clearCache();
+        parent::setUpBeforeClass();
+    }
+
+    protected function createKernel($configFile)
+    {
+        // Clear the cache
+        $fs = new Filesystem();
+        $fs->remove(__DIR__ . '/Fixtures/var/cache/dev');
+        $fs->remove(__DIR__ . '/Fixtures/var/cache/phpdi');
 
         $kernel = new Kernel($configFile);
         $kernel->boot();

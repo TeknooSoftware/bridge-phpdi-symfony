@@ -45,7 +45,9 @@ trait BridgeTrait
         DIContainerBuilder $diBuilder,
         ContainerInterface $wrapContainer,
         array $definitionsFiles,
-        array $definitionsImport
+        array $definitionsImport,
+        ?string $compilationPath = null,
+        bool $enableCache = false
     ): DIContainer {
         $diBuilder->wrapContainer($wrapContainer);
 
@@ -58,6 +60,18 @@ trait BridgeTrait
             $imports[$diKey] = get($sfKey);
         }
         $diBuilder->addDefinitions($imports);
+
+        if (null !== $compilationPath) {
+            $diBuilder->enableCompilation(
+                $compilationPath,
+                'CompiledContainer',
+                CompiledContainer::class
+            );
+        }
+
+        if (true === $enableCache) {
+            $diBuilder->enableDefinitionCache();
+        }
 
         return $diBuilder->build();
     }

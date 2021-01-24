@@ -1,3 +1,5 @@
 di_bridge:
+  compilation_path: '%tests.functional.compilation_path%'
+  enable_cache: '%tests.functional.enable_cache%'
   definitions:
     - '%kernel.project_dir%/config/di.php'

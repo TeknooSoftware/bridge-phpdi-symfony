@@ -56,6 +56,10 @@ class Bridge implements ContainerInterface
 
     private ?DIContainer $diContainer = null;
 
+    private ?string $compilationPath = null;
+
+    private bool $cacheEnabled = false;
+
     /**
      * @param array<int, string> $definitionsFiles
      * @param array<string, string> $definitionsImport
@@ -64,12 +68,16 @@ class Bridge implements ContainerInterface
         DIContainerBuilder $diBuilder,
         SfContainer $sfContainer,
         array $definitionsFiles,
-        array $definitionsImport
+        array $definitionsImport,
+        ?string $compilationPath = null,
+        bool $enableCache = false
     ) {
         $this->diBuilder = $diBuilder;
         $this->sfContainer = $sfContainer;
         $this->definitionsFiles = $definitionsFiles;
         $this->definitionsImport = $definitionsImport;
+        $this->compilationPath = $compilationPath;
+        $this->cacheEnabled = $enableCache;
     }
 
     private function getDIContainer(): DIContainer
@@ -82,7 +90,9 @@ class Bridge implements ContainerInterface
             $this->diBuilder,
             $this,
             $this->definitionsFiles,
-            $this->definitionsImport
+            $this->definitionsImport,
+            $this->compilationPath,
+            $this->cacheEnabled
         );
     }
 

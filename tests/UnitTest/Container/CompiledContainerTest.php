@@ -29,13 +29,13 @@ use DI\Definition\Definition;
 use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 use PHPUnit\Framework\TestCase;
-use Teknoo\DI\SymfonyBridge\Container\Container;
+use Teknoo\DI\SymfonyBridge\Container\CompiledContainer;
 
 /**
- * @covers \Teknoo\DI\SymfonyBridge\Container\Container
+ * @covers \Teknoo\DI\SymfonyBridge\Container\CompiledContainer
  * @covers \Teknoo\DI\SymfonyBridge\Container\ContainerDefinitionTrait
  */
-class ContainerTest extends TestCase
+class CompiledContainerTest extends TestCase
 {
     private ?MutableDefinitionSource $originalDefinitions = null;
 
@@ -51,9 +51,9 @@ class ContainerTest extends TestCase
         return $this->originalDefinitions;
     }
 
-    public function buildInstance(): Container
+    public function buildInstance(): CompiledContainer
     {
-        return new Container(
+        return new CompiledContainer(
             $this->getMutableDefinitionSourceMock()
         );
     }
@@ -66,7 +66,7 @@ class ContainerTest extends TestCase
 
     public function testExtractDefinitionWhenDefinitionsInjected()
     {
-        self::assertNull((new Container())->extractDefinition('foo'));
+        self::assertNull((new CompiledContainer())->extractDefinition('foo'));
     }
 
     public function testExtractDefinitionWhenNoThereAreNotFound()

@@ -62,10 +62,28 @@ class BridgeBuilder
      */
     private array $definitionsImport = [];
 
+    private ?string $compilationPath = null;
+
+    private bool $cacheEnabled = false;
+
     public function __construct(DIContainerBuilder $diBuilder, SfContainerBuilder $sfBuilder)
     {
         $this->diBuilder = $diBuilder;
         $this->sfBuilder = $sfBuilder;
+    }
+
+    public function prepareCompilation(?string $compilationPath): self
+    {
+        $this->compilationPath = $compilationPath;
+
+        return $this;
+    }
+
+    public function enableCache(bool $enable): self
+    {
+        $this->cacheEnabled = $enable;
+
+        return $this;
     }
 
     /**
@@ -88,16 +106,18 @@ class BridgeBuilder
         return $this;
     }
 
-    private function getDIContainer(): Container
+    private function getDIContainer(): ContainerInterface
     {
         $container = $this->buildContainer(
             $this->diBuilder,
             $this->sfBuilder,
             \array_keys($this->definitionsFiles),
-            $this->definitionsImport
+            $this->definitionsImport,
+            $this->compilationPath,
+            $this->cacheEnabled
         );
 
-        if (!$container instanceof Container) {
+        if (!$container instanceof ContainerInterface) {
             throw new \RuntimeException('Error bad container needed');
         }
 
@@ -112,7 +132,9 @@ class BridgeBuilder
                 new SfReference(DIContainerBuilder::class),
                 new SfReference('service_container'),
                 \array_keys($this->definitionsFiles),
-                $this->definitionsImport
+                $this->definitionsImport,
+                $this->compilationPath,
+                $this->cacheEnabled
             ]
         );
     }
@@ -140,7 +162,7 @@ class BridgeBuilder
         );
     }
 
-    private function extractDIDefinition(Container $container, string $entryName): DIDefinition
+    private function extractDIDefinition(ContainerInterface $container, string $entryName): DIDefinition
     {
         $diReference = null;
         $diDefinition = null;

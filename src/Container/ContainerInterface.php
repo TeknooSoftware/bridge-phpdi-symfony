@@ -25,30 +25,21 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
-use DI\Container as DIContainer;
-use DI\Definition\Source\MutableDefinitionSource;
-use DI\Proxy\ProxyFactory;
+use DI\Definition\Definition;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
-class Container extends DIContainer implements ContainerInterface
+interface ContainerInterface extends PsrContainerInterface
 {
-    use ContainerDefinitionTrait;
+    public function extractDefinition(string $name): ?Definition;
 
-    public function __construct(
-        ?MutableDefinitionSource $definitionSource = null,
-        ?ProxyFactory $proxyFactory = null,
-        ?PsrContainerInterface $wrapperContainer = null
-    ) {
-        parent::__construct(
-            $definitionSource,
-            $proxyFactory,
-            $wrapperContainer
-        );
-
-        $this->originalDefinitions = $definitionSource;
-    }
+    /**
+     * Get defined container entries.
+     *
+     * @return string[]
+     */
+    public function getKnownEntryNames(): array;
 }

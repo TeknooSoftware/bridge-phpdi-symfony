@@ -1,6 +1,10 @@
 imports:
      - { resource: 'di_bridge.yml' }
 
+parameters:
+  tests.functional.compilation_path: ~
+  tests.functional.enable_cache: false
+
 services:
     class1:
         class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1

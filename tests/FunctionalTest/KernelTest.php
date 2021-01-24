@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
+use DI\Definition\Source\SourceCache;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
 use Psr\Container\ContainerInterface;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
@@ -37,7 +38,25 @@ class KernelTest extends AbstractFunctionalTest
 {
     public function testKernelShouldBoot()
     {
-        $kernel = $this->createKernel();
+        $kernel = $this->createKernel('empty.yml');
+
+        self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
+    }
+
+    public function testKernelShouldBootWithCache()
+    {
+        if (!SourceCache::isSupported()) {
+            self::markTestSkipped('APCu is not enabled');
+        }
+
+        $kernel = $this->createKernel('empty_with_cache.yml');
+
+        self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
+    }
+
+    public function testKernelShouldBootWithCompilation()
+    {
+        $kernel = $this->createKernel('empty_with_compilation.yml');
 
         self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
     }
@@ -50,9 +69,49 @@ class KernelTest extends AbstractFunctionalTest
         self::assertInstanceOf(Class2::class, $object);
     }
 
+    public function testSymfonyShouldResolveClassesFromYamlWithCache()
+    {
+        if (!SourceCache::isSupported()) {
+            self::markTestSkipped('APCu is not enabled');
+        }
+
+        $kernel = $this->createKernel('class2_with_cache.yml');
+
+        $object = $kernel->getContainer()->get('class2');
+        self::assertInstanceOf(Class2::class, $object);
+    }
+
+    public function testSymfonyShouldResolveClassesFromYamlWithCompilation()
+    {
+        $kernel = $this->createKernel('class2_with_compilation.yml');
+
+        $object = $kernel->getContainer()->get('class2');
+        self::assertInstanceOf(Class2::class, $object);
+    }
+
     public function testSymfonyShouldResolveClassesFromDI()
     {
         $kernel = $this->createKernel('empty.yml');
+
+        $object = $kernel->getContainer()->get(ContainerAwareController::class);
+        self::assertInstanceOf(ContainerAwareController::class, $object);
+    }
+
+    public function testSymfonyShouldResolveClassesFromDIWithCache()
+    {
+        if (!SourceCache::isSupported()) {
+            self::markTestSkipped('APCu is not enabled');
+        }
+
+        $kernel = $this->createKernel('empty_with_cache.yml');
+
+        $object = $kernel->getContainer()->get(ContainerAwareController::class);
+        self::assertInstanceOf(ContainerAwareController::class, $object);
+    }
+
+    public function testSymfonyShouldResolveClassesFromDIWithCompilation()
+    {
+        $kernel = $this->createKernel('empty_with_compilation.yml');
 
         $object = $kernel->getContainer()->get(ContainerAwareController::class);
         self::assertInstanceOf(ContainerAwareController::class, $object);

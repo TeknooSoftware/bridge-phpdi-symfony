@@ -3,7 +3,7 @@ imports:
 
 parameters:
     tests.functional.compilation_path: ~
-    tests.functional.enable_cache: false
+    tests.functional.enable_cache: true
 
 di_bridge:
     definitions:

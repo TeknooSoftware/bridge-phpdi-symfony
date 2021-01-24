@@ -2,5 +2,5 @@ imports:
   - { resource: 'di_bridge.yml' }
 
 parameters:
-  tests.functional.compilation_path: ~
+  tests.functional.compilation_path: '%kernel.project_dir%/var/cache/phpdi'
   tests.functional.enable_cache: false

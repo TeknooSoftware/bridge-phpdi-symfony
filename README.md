@@ -30,14 +30,18 @@ Install this bridge
 * Create the file `di_bridge.yaml` in your config folder and put in
 
         di_bridge:
-              definitions:
-                - 'list of PHP-DI definitions file, you can use Symfony joker like %kernel.project_dir%'
-                #example
-                - '%kernel.project_dir%/vendor/editor_name/package_name/src/di.php'
-                - '%kernel.project_dir%/config/di.php'
-              import:
-                #To make alias from SF entries into PHPDI
-                My\Class\Name: 'symfony.contaner.entry.name'
+          #To enable PHP-DI's container compilation (disable by default)
+          compilation_path: ~ #Default, or path to store cache, like '%kernel.project_dir%/var/cache/phpdi'
+          #To enable PHP-DI's cache (disable by default)
+          enable_cache: false #Default or true
+          definitions:
+            - 'list of PHP-DI definitions file, you can use Symfony joker like %kernel.project_dir%'
+            #example
+            - '%kernel.project_dir%/vendor/editor_name/package_name/src/di.php'
+            - '%kernel.project_dir%/config/di.php'
+          import:
+            #To make alias from SF entries into PHPDI
+            My\Class\Name: 'symfony.contaner.entry.name'
 
 
 Support this project

@@ -67,7 +67,7 @@ class BridgeTest extends TestCase
         return $this->sfContainer;
     }
 
-    public function buildInstance(): Bridge
+    public function buildInstance(?string $compilationPath = null, bool $enableCache = false): Bridge
     {
         return new Bridge(
             $this->getDiBuilderMock(),
@@ -78,7 +78,9 @@ class BridgeTest extends TestCase
             ],
             [
                 'hello' => 'world'
-            ]
+            ],
+            $compilationPath,
+            $enableCache
         );
     }
 
@@ -123,6 +125,52 @@ class BridgeTest extends TestCase
             ->willReturn($container);
 
         $bridge = $this->buildInstance();
+        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+    }
+
+    public function testInvokeWhenTheServiceIdWasFoundWithCompilationPath()
+    {
+        $container = $this->createMock(DIContainer::class);
+
+        $container->expects(self::once())
+            ->method('has')
+            ->with('foo')
+            ->willReturn(true);
+
+        $container->expects(self::once())
+            ->method('get')
+            ->with('foo')
+            ->willReturn(new \stdClass());
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($container);
+
+        $bridge = $this->buildInstance('/foo/bar', false);
+        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+    }
+
+    public function testInvokeWhenTheServiceIdWasFoundWithCache()
+    {
+        $container = $this->createMock(DIContainer::class);
+
+        $container->expects(self::once())
+            ->method('has')
+            ->with('foo')
+            ->willReturn(true);
+
+        $container->expects(self::once())
+            ->method('get')
+            ->with('foo')
+            ->willReturn(new \stdClass());
+
+        $this->getDiBuilderMock()
+            ->expects(self::any())
+            ->method('build')
+            ->willReturn($container);
+
+        $bridge = $this->buildInstance(null, true);
         self::assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 

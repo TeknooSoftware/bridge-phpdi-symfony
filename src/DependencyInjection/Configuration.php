@@ -40,6 +40,12 @@ class Configuration implements ConfigurationInterface
 
         $root = $treeBuilder->getRootNode();
         $root->children()
+            ->scalarNode('compilation_path')
+                ->defaultNull()
+            ->end()//compilation_path
+            ->booleanNode('enable_cache')
+                ->defaultFalse()
+            ->end() //enable_cache
             ->arrayNode('definitions')
                 ->scalarPrototype()->end()
             ->end() // definitions
