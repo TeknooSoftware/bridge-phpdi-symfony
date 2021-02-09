@@ -189,6 +189,7 @@ class BridgeBuilder
 
     private function getClassFromFactory(FactoryDefinition $definition): string
     {
+        $definitionName = $definition->getName();
         $callable = $definition->getCallable();
 
         $reflectionMethod = null;
@@ -204,12 +205,14 @@ class BridgeBuilder
             //Is internal function or a closure
             $reflectionMethod = new \ReflectionFunction($callable);
         } else {
-            throw new RuntimeException('Callable not supported');
+            throw new RuntimeException("Callable not supported for '$definitionName'");
         }
 
         $returnType = $reflectionMethod->getReturnType();
         if (!$returnType instanceof \ReflectionNamedType) {
-            throw new RuntimeException('This bridge supports only \ReflectionNamedType from Reflection');
+            throw new RuntimeException(
+                "Missing a return type or non \ReflectionNamedType from Reflection for '$definitionName'"
+            );
         }
 
         return (string) $returnType->getName();
