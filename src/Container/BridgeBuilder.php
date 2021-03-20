@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license and the version 3 of the GPL3
+ * This source file is subject to the MIT license
  * license that are bundled with this package in the folder licences
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace Teknoo\DI\SymfonyBridge\Container;
 
+use Closure;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
@@ -34,11 +35,23 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use ReflectionFunction;
+use ReflectionNamedType;
+use ReflectionObject;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
-use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
+
+use function array_keys;
+use function class_exists;
+use function interface_exists;
+use function is_array;
+use function is_callable;
+use function is_object;
+use function is_string;
 
 /**
  * @license     http://teknoo.software/license/mit         MIT License
@@ -88,7 +101,6 @@ class BridgeBuilder
 
     /**
      * @param array<int, string> $definitions
-     * @return $this
      */
     public function loadDefinition(array $definitions): self
     {
@@ -111,14 +123,14 @@ class BridgeBuilder
         $container = $this->buildContainer(
             $this->diBuilder,
             $this->sfBuilder,
-            \array_keys($this->definitionsFiles),
+            array_keys($this->definitionsFiles),
             $this->definitionsImport,
             $this->compilationPath,
             $this->cacheEnabled
         );
 
         if (!$container instanceof ContainerInterface) {
-            throw new \RuntimeException('Error bad container needed');
+            throw new RuntimeException('Error bad container needed');
         }
 
         return $container;
@@ -131,7 +143,7 @@ class BridgeBuilder
             [
                 new SfReference(DIContainerBuilder::class),
                 new SfReference('service_container'),
-                \array_keys($this->definitionsFiles),
+                array_keys($this->definitionsFiles),
                 $this->definitionsImport,
                 $this->compilationPath,
                 $this->cacheEnabled
@@ -151,10 +163,7 @@ class BridgeBuilder
         return $definition;
     }
 
-    /**
-     * @param mixed $value
-     */
-    private function setParameter(string $parameterName, $value): void
+    private function setParameter(string $parameterName, mixed $value): void
     {
         $this->sfBuilder->setParameter(
             $parameterName,
@@ -193,24 +202,24 @@ class BridgeBuilder
         $callable = $definition->getCallable();
 
         $reflectionMethod = null;
-        if (!$callable instanceof \Closure && \is_object($callable) && \is_callable($callable)) {
+        if (!$callable instanceof Closure && is_object($callable) && is_callable($callable)) {
             //Invokable object
-            $reflectionObject = new \ReflectionObject($callable);
+            $reflectionObject = new ReflectionObject($callable);
             $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (\is_array($callable) && \is_callable($callable)) {
+        } elseif (is_array($callable) && is_callable($callable)) {
             //Callable is a public method from object
-            $reflectionObject = new \ReflectionObject($callable[0]);
+            $reflectionObject = new ReflectionObject($callable[0]);
             $reflectionMethod = $reflectionObject->getMethod($callable[1]);
-        } elseif ($callable instanceof \Closure || (\is_string($callable) && \is_callable($callable))) {
+        } elseif ($callable instanceof Closure || (is_string($callable) && is_callable($callable))) {
             //Is internal function or a closure
-            $reflectionMethod = new \ReflectionFunction($callable);
+            $reflectionMethod = new ReflectionFunction($callable);
         } else {
-            throw new RuntimeException("Callable not supported for '$definitionName'");
+            throw new SfRuntimeException("Callable not supported for '$definitionName'");
         }
 
         $returnType = $reflectionMethod->getReturnType();
-        if (!$returnType instanceof \ReflectionNamedType) {
-            throw new RuntimeException(
+        if (!$returnType instanceof ReflectionNamedType) {
+            throw new SfRuntimeException(
                 "Missing a return type or non \ReflectionNamedType from Reflection for '$definitionName'"
             );
         }
@@ -298,7 +307,7 @@ class BridgeBuilder
         ];
 
         foreach ($diContainer->getKnownEntryNames() as $entryName) {
-            if (\class_exists($entryName) || \interface_exists($entryName)) {
+            if (class_exists($entryName) || interface_exists($entryName)) {
                 $definitions[$entryName] = $this->createDefinition($entryName, $entryName);
 
                 continue;

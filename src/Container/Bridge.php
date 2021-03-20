@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license and the version 3 of the GPL3
+ * This source file is subject to the MIT license
  * license that are bundled with this package in the folder licences
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -99,11 +99,10 @@ class Bridge implements ContainerInterface
     /**
      * Service Factory used by Symfony' container to get service instance from PHP-DI
      *
-     * @return mixed
      * @throws \DI\DependencyException
      * @throws \DI\NotFoundException
      */
-    public function __invoke(string $id)
+    public function __invoke(string $id): mixed
     {
         $diContainer = $this->getDIContainer();
 
@@ -125,11 +124,10 @@ class Bridge implements ContainerInterface
      * only via getParameter, but in PHP-DI via the method "get" like other definition.
      *
      * @param string $id
-     * @return mixed
      * @throws \DI\DependencyException
      * @throws \DI\NotFoundException
      */
-    public function get($id)
+    public function get($id): mixed
     {
         if ($this->sfContainer->has($id)) {
             return $this->sfContainer->get($id);
@@ -152,7 +150,6 @@ class Bridge implements ContainerInterface
      * accessible only via getParameter, but in PHP-DI via the method "get" like other definition.
      *
      * @param string $id
-     * @return bool
      */
     public function has($id): bool
     {

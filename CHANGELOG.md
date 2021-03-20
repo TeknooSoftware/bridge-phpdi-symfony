@@ -1,5 +1,11 @@
 #Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+##[5.0.0] - 2021-03-20
+- Migrate to PHP 8.0
+- Remove support of Symfony 4.4
+- Fix license header
+- QA
+
 ##[4.1.1] - 2021-02-09
 - Exception of BridgeBuilder display the Definition's name, and it is more explicit when the return type missing
 
