@@ -40,44 +40,20 @@ class Bridge implements ContainerInterface
 {
     use BridgeTrait;
 
-    private DIContainerBuilder $diBuilder;
-
-    private SfContainer $sfContainer;
-
-    /**
-     * @var array<int, string>
-     */
-    private array $definitionsFiles;
-
-    /**
-     * @var array<string, string>
-     */
-    private array $definitionsImport;
-
     private ?DIContainer $diContainer = null;
-
-    private ?string $compilationPath = null;
-
-    private bool $cacheEnabled = false;
 
     /**
      * @param array<int, string> $definitionsFiles
      * @param array<string, string> $definitionsImport
      */
     public function __construct(
-        DIContainerBuilder $diBuilder,
-        SfContainer $sfContainer,
-        array $definitionsFiles,
-        array $definitionsImport,
-        ?string $compilationPath = null,
-        bool $enableCache = false
+        private DIContainerBuilder $diBuilder,
+        private SfContainer $sfContainer,
+        private array $definitionsFiles,
+        private array $definitionsImport,
+        private ?string $compilationPath = null,
+        private bool $cacheEnabled = false,
     ) {
-        $this->diBuilder = $diBuilder;
-        $this->sfContainer = $sfContainer;
-        $this->definitionsFiles = $definitionsFiles;
-        $this->definitionsImport = $definitionsImport;
-        $this->compilationPath = $compilationPath;
-        $this->cacheEnabled = $enableCache;
     }
 
     private function getDIContainer(): DIContainer

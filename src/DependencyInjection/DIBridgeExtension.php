@@ -37,11 +37,9 @@ use Teknoo\DI\SymfonyBridge\Container\Container;
  */
 class DIBridgeExtension extends Extension
 {
-    private string $bridgeBuilderClass;
-
-    public function __construct(string $bridgeBuilderClass = BridgeBuilder::class)
-    {
-        $this->bridgeBuilderClass = $bridgeBuilderClass;
+    public function __construct(
+        private string $bridgeBuilderClass = BridgeBuilder::class,
+    ) {
     }
 
     /**

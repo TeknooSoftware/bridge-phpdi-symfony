@@ -61,10 +61,6 @@ class BridgeBuilder
 {
     use BridgeTrait;
 
-    private DIContainerBuilder $diBuilder;
-
-    private SfContainerBuilder $sfBuilder;
-
     /**
      * @var array<string, bool>
      */
@@ -79,10 +75,10 @@ class BridgeBuilder
 
     private bool $cacheEnabled = false;
 
-    public function __construct(DIContainerBuilder $diBuilder, SfContainerBuilder $sfBuilder)
-    {
-        $this->diBuilder = $diBuilder;
-        $this->sfBuilder = $sfBuilder;
+    public function __construct(
+        private DIContainerBuilder $diBuilder,
+        private SfContainerBuilder $sfBuilder,
+    ) {
     }
 
     public function prepareCompilation(?string $compilationPath): self

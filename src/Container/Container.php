@@ -41,7 +41,7 @@ class Container extends DIContainer implements ContainerInterface
     public function __construct(
         ?MutableDefinitionSource $definitionSource = null,
         ?ProxyFactory $proxyFactory = null,
-        ?PsrContainerInterface $wrapperContainer = null
+        ?PsrContainerInterface $wrapperContainer = null,
     ) {
         parent::__construct(
             $definitionSource,

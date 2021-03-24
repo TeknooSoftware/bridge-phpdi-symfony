@@ -45,7 +45,7 @@ trait ContainerDefinitionTrait
 
         try {
             return $this->originalDefinitions->getDefinition($name);
-        } catch (InvalidDefinition $error) {
+        } catch (InvalidDefinition) {
             return null;
         }
     }
