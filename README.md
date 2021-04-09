@@ -1,7 +1,6 @@
 Teknoo Software - PHP-DI integration with Symfony
 =================================================
 
-[![Build Status](https://travis-ci.com/TeknooSoftware/symfony-bridge.svg?branch=master)](https://travis-ci.com/TeknooSoftware/symfony-bridge)
 [![Latest Stable Version](https://poser.pugx.org/teknoo/symfony-bridge/v/stable)](https://packagist.org/packages/teknoo/symfony-bridge)
 [![Latest Unstable Version](https://poser.pugx.org/teknoo/symfony-bridge/v/unstable)](https://packagist.org/packages/teknoo/symfony-bridge)
 [![Total Downloads](https://poser.pugx.org/teknoo/symfony-bridge/downloads)](https://packagist.org/packages/teknoo/symfony-bridge)
