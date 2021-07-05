@@ -28,6 +28,8 @@ namespace Teknoo\DI\SymfonyBridge;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
+ * PHP-DI's Bundle integration in Symfony
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

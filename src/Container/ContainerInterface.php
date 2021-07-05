@@ -29,6 +29,10 @@ use DI\Definition\Definition;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
+ * Extension of PSR Container Interface, dedicated to PHP-DI, to add to usefull methods for the bridge :
+ *  - `getKnownEntryNames()` to list all DI's entries defined in this container
+ *  - `extractDefinition` to extract the DI's Definition object, used to create the factory will be injected into
+ *    Symfony's container
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

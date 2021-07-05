@@ -33,6 +33,13 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
+ * PSR `ContainerInterface` implementation as bridge between Symfony's container and PHP-DI container.
+ * For PHP-DI, this container will be injected as Fallback container.
+ * For Symfony Container, each PHP-DI entry will be registered into Symfony, with this container as factory.
+ * The container configuration is done via the method `buildContainer` in the `BridgeTrait` used also by the
+ * `BridgeBuilder` during the compilation of the Symfony Container.
+ *
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
@@ -56,6 +63,10 @@ class Bridge implements ContainerInterface
     ) {
     }
 
+    /*
+     * Get the PHP DI container (build it if necessary) to use it when this object is called as factory by the Symfony
+     * Container
+     */
     private function getDIContainer(): DIContainer
     {
         if (null !== $this->diContainer) {

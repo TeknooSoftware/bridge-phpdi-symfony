@@ -30,6 +30,10 @@ use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 
 /**
+ * Default implementation of the method `extractDefinition` defined in the `ContainerInterface` of this namespace, to
+ * extract the DI's Definition object, from PHPDI Builder, used to create the factory will be injected into
+ * Symfony's container
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

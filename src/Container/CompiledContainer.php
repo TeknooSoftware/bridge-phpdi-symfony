@@ -31,6 +31,11 @@ use DI\Proxy\ProxyFactory;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
+ * Implementation of the `ContainerInterface` with a compiled PHP-DI instance, for more performance.
+ * Use `ContainerDefinitionTrait` to implement the method `extractDefinition` defined, to extract the DI's Definition
+ * object, from PHPDI Builder, used to create the factory will be injected into Symfony's container.
+ * The method `getKnownEntryNames` is already implemented by PHP-DI.
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

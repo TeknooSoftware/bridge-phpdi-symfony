@@ -54,6 +54,15 @@ use function is_object;
 use function is_string;
 
 /**
+ * Class used during the compilation of Symfony.
+ * It will reuse a PHP DI Container builder to initialize a new DI Container with definitions files passed via
+ *`loadDefinition`. (Compilation and Cache can be enabled via `prepareCompilation()` and `enableCache()`).
+ * Symfony's entries can be imported via `import`.
+ * After this, This builder will be browse all entries defined in the DI Container, to register them into Symfony
+ * Container with Bridge container as factory (Needed arguments and returned type are conserved and also passed to
+ * Symfony). PHP-DI's References and Factories are also managed
+ * Parameters injected into PHP-DI as String, Values, Array and EnvVar are also imported into Symfony's Container
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
@@ -288,8 +297,6 @@ class BridgeBuilder
 
         if ($diDefinition instanceof ArrayDefinition) {
             $this->setParameter($entryName, $this->convertArrayDefinition($diDefinition->getValues()));
-
-            return;
         }
     }
 

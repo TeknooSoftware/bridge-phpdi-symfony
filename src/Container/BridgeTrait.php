@@ -32,6 +32,12 @@ use Psr\Container\ContainerInterface;
 use function DI\get;
 
 /**
+ * Trait to create a new PHP-DI Container thanks ti PHP-DI Builder, wrapping a PSR Container instance as fallback
+ * container, and add all DI definitions passed in `$definitionsFiles`.
+ * FOr all entries in `$definitionsImport`, a new definition is added via the heleper `DI\get`.
+ * The Cache and the Compilation can be enable via `$enableCache` and pass the path to write the compiled container in
+ * `$compilationPath`.
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

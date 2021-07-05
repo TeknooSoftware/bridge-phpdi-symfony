@@ -32,6 +32,10 @@ use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
 
 /**
+ * Symfony Bundle extension to parse configuration defined in `Configuration` and initialize the Bridge Builder with
+ * the loaded configuration, and a new PHPDI Container builder and the current instance of Symfony Container to
+ * inject all PHP-DI's entries into Symfony's Container.
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */
