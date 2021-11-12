@@ -6,4 +6,6 @@ parameters:
         -
             message: '#Method [a-zA-Z0-9\\_]+::extractDIDefinition\(\) should return [a-zA-Z0-9\\_]+ but returns [a-zA-Z0-9\\_]+\|null#'
             path: src/Container/BridgeBuilder.php
-        - '#mixed#'
+        -
+            message: '#Container::setParameter#'
+            path: src/Container/BridgeBuilder.php
