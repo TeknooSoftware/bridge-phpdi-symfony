@@ -31,6 +31,11 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
 
+use function is_string;
+use function is_scalar;
+use function is_array;
+use function is_iterable;
+
 /**
  * Symfony Bundle extension to parse configuration defined in `Configuration` and initialize the Bridge Builder with
  * the loaded configuration, and a new PHPDI Container builder and the current instance of Symfony Container to
@@ -41,13 +46,16 @@ use Teknoo\DI\SymfonyBridge\Container\Container;
  */
 class DIBridgeExtension extends Extension
 {
+    /**
+     * @param class-string<BridgeBuilder> $bridgeBuilderClass
+     */
     public function __construct(
         private string $bridgeBuilderClass = BridgeBuilder::class,
     ) {
     }
 
     /**
-     * @param array<string, mixed> $configuration
+     * @param array<string, string|array<string>> $configuration
      */
     private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
     {
@@ -57,25 +65,25 @@ class DIBridgeExtension extends Extension
             $container
         );
 
-        if (!empty($configuration['compilation_path'])) {
+        if (!empty($configuration['compilation_path']) && is_string($configuration['compilation_path'])) {
             $builder->prepareCompilation(
                 $configuration['compilation_path']
             );
         }
 
-        if (isset($configuration['enable_cache'])) {
+        if (isset($configuration['enable_cache'])  && is_scalar($configuration['enable_cache'])) {
             $builder->enableCache(
                 !empty($configuration['enable_cache'])
             );
         }
 
-        if ($configuration['definitions']) {
+        if (!empty($configuration['definitions']) && is_array($configuration['definitions'])) {
             $builder->loadDefinition(
                 $configuration['definitions']
             );
         }
 
-        if ($configuration['import']) {
+        if (!empty($configuration['import']) && is_iterable($configuration['import'])) {
             foreach ($configuration['import'] as $diKey => $sfKey) {
                 $builder->import($diKey, $sfKey);
             }
@@ -85,7 +93,7 @@ class DIBridgeExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $configs
+     * @param array<string, string|array<string>> $configs
      */
     public function load(array $configs, SymfonyContainerBuilder $container): self
     {
