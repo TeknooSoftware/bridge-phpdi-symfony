@@ -41,9 +41,9 @@ class Kernel extends SymfonyKernel
         parent::__construct('dev', true);
     }
 
-    public function registerBundles()
+    public function registerBundles(): array
     {
-        yield new DIBridgeBundle();
+        return [new DIBridgeBundle()];
     }
 
     public function getProjectDir(): string
