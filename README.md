@@ -58,7 +58,7 @@ To install this library with composer, run this command :
 
 This library requires :
 
-    * PHP 7.4+
+    * PHP 8.0+
     * A PHP autoloader (Composer is recommended)
     * PHP-DI.
     * Symfony/dependency-injection.
