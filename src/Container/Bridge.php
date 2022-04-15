@@ -50,13 +50,13 @@ class Bridge implements ContainerInterface
     private ?DIContainer $diContainer = null;
 
     /**
-     * @param array<int, string> $definitionsFiles
+     * @param iterable<string> $definitionsFiles
      * @param array<string, string> $definitionsImport
      */
     public function __construct(
         private DIContainerBuilder $diBuilder,
         private SfContainer $sfContainer,
-        private array $definitionsFiles,
+        private iterable $definitionsFiles,
         private array $definitionsImport,
         private ?string $compilationPath = null,
         private bool $cacheEnabled = false,

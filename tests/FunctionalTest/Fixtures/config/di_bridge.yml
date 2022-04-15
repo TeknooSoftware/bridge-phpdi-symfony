@@ -3,3 +3,4 @@ di_bridge:
   enable_cache: '%tests.functional.enable_cache%'
   definitions:
     - '%kernel.project_dir%/config/di.php'
+    - {priority: 0, file: '%kernel.project_dir%/config/di2.php'}

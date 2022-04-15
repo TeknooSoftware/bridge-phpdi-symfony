@@ -44,13 +44,13 @@ use function DI\get;
 trait BridgeTrait
 {
     /**
-     * @param array<int, string> $definitionsFiles
+     * @param iterable<string> $definitionsFiles
      * @param array<string, string> $definitionsImport
      */
     private function buildContainer(
         DIContainerBuilder $diBuilder,
         ContainerInterface $wrapContainer,
-        array $definitionsFiles,
+        iterable $definitionsFiles,
         array $definitionsImport,
         ?string $compilationPath = null,
         bool $enableCache = false

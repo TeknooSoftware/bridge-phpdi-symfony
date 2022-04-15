@@ -44,14 +44,16 @@ use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
+use Traversable;
 
-use function array_keys;
 use function class_exists;
 use function interface_exists;
 use function is_array;
 use function is_callable;
 use function is_object;
 use function is_string;
+use function iterator_to_array;
+use function krsort;
 
 /**
  * Class used during the compilation of Symfony.
@@ -71,7 +73,7 @@ class BridgeBuilder
     use BridgeTrait;
 
     /**
-     * @var array<string, bool>
+     * @var array<string, array{priority?:int, file:string}>
      */
     private array $definitionsFiles = [];
 
@@ -105,12 +107,12 @@ class BridgeBuilder
     }
 
     /**
-     * @param array<int, string> $definitions
+     * @param array<int, array{priority?:int, file:string}> $definitions
      */
     public function loadDefinition(array $definitions): self
     {
         foreach ($definitions as &$definition) {
-            $this->definitionsFiles[$definition] = true;
+            $this->definitionsFiles[$definition['file']] = $definition;
         }
 
         return $this;
@@ -123,12 +125,32 @@ class BridgeBuilder
         return $this;
     }
 
+    /**
+     * @return Traversable<string>
+     */
+    private function getOrderedDefinitionsFiles(): Traversable
+    {
+        $toOrder = [];
+        foreach ($this->definitionsFiles as &$definitionFile) {
+            $toOrder[(int) ($definitionFile['priority'] ?? 0)][] = $definitionFile['file'];
+        }
+
+        krsort($toOrder);
+
+        //Can not use yield from with iterator_to_array, skip first entries
+        foreach ($toOrder as &$list) {
+            foreach ($list as &$file) {
+                yield $file;
+            }
+        }
+    }
+
     private function getDIContainer(): ContainerInterface
     {
         $container = $this->buildContainer(
             $this->diBuilder,
             $this->sfBuilder,
-            array_keys($this->definitionsFiles),
+            $this->getOrderedDefinitionsFiles(),
             $this->definitionsImport,
             $this->compilationPath,
             $this->cacheEnabled
@@ -143,12 +165,13 @@ class BridgeBuilder
 
     private function getBridgeDefinition(): SfDefinition
     {
+        $definitionsFiles = iterator_to_array($this->getOrderedDefinitionsFiles());
         return new SfDefinition(
             Bridge::class,
             [
                 new SfReference(DIContainerBuilder::class),
                 new SfReference('service_container'),
-                array_keys($this->definitionsFiles),
+                $definitionsFiles,
                 $this->definitionsImport,
                 $this->compilationPath,
                 $this->cacheEnabled

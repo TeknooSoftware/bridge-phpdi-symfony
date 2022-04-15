@@ -98,7 +98,10 @@ class BridgeBuilderTest extends TestCase
     {
         self::assertInstanceOf(
             BridgeBuilder::class,
-            $this->buildInstance()->loadDefinition(['foo', 'bar'])
+            $this->buildInstance()->loadDefinition([
+                ['priority' => 0, 'file' => 'foo'],
+                ['priority' => 0, 'file' => 'bar']
+            ])
         );
     }
 
@@ -164,8 +167,8 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithNotFoundEntry()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
         $container = $this->createMock(Container::class);
@@ -202,8 +205,8 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithNotSupportedCallableFactory()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
         $container = $this->createMock(Container::class);
@@ -245,8 +248,8 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithNotSupportedReflectionType()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
         $container = $this->createMock(Container::class);
@@ -464,11 +467,11 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, null, false);
+        $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], null, false);
 
         self::assertInstanceOf(
             BridgeBuilder::class,
@@ -482,11 +485,11 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithCacheAndNoCompilation()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, null, true);
+        $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], null, true);
 
         self::assertInstanceOf(
             BridgeBuilder::class,
@@ -501,11 +504,67 @@ class BridgeBuilderTest extends TestCase
     public function testInitializeSymfonyContainerWithNoCacheAndCompilation()
     {
         $definitionsFiles = [
-            'foo',
-            'bar'
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $this->prepareForInitializeSymfonyContainerTests($definitionsFiles, '/foo/bar', false);
+        $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], '/foo/bar', false);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->prepareCompilation('/foo/bar')
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilationAndOrderedFiles()
+    {
+        $definitionsFiles = [
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 10, 'file' => 'bar'],
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], null, false);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithCacheAndNoCompilationAndOrderedFiles()
+    {
+        $definitionsFiles = [
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 10, 'file' => 'bar'],
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], null, true);
+
+        self::assertInstanceOf(
+            BridgeBuilder::class,
+            $this->buildInstance()
+                ->loadDefinition($definitionsFiles)
+                ->import('hello', 'world')
+                ->enableCache(true)
+                ->initializeSymfonyContainer()
+        );
+    }
+
+    public function testInitializeSymfonyContainerWithNoCacheAndCompilationAndOrderedFiles()
+    {
+        $definitionsFiles = [
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 10, 'file' => 'bar'],
+        ];
+
+        $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], '/foo/bar', false);
 
         self::assertInstanceOf(
             BridgeBuilder::class,

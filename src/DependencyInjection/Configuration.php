@@ -63,7 +63,16 @@ class Configuration implements ConfigurationInterface
                 ->defaultFalse()
             ->end() //enable_cache
             ->arrayNode('definitions')
-                ->scalarPrototype()->end()
+                ->arrayPrototype()
+                    ->beforeNormalization()
+                    ->ifString()
+                        ->then(fn ($v) => ['priority' => 0, 'file' => $v])
+                    ->end()
+                    ->children()
+                        ->integerNode('priority')->end()
+                        ->scalarNode('file')->end()
+                    ->end()
+                ->end()
             ->end() // definitions
             ->arrayNode('import')
                 ->useAttributeAsKey('name')
