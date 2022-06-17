@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [5.1.1] - 2022-06-17
+### Stable Release
+- Update dev libs requirements
+
 ## [5.1.0] - 2022-04-15
 ### Stable Release
 - Add `priority` key to `di_bridge.definitions` list to sort definitions

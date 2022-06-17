@@ -39,7 +39,7 @@ use DI\Definition\Source\MutableDefinitionSource;
  */
 trait ContainerDefinitionTrait
 {
-    private ?MutableDefinitionSource $originalDefinitions;
+    private ?MutableDefinitionSource $originalDefinitions = null;
 
     public function extractDefinition(string $name): ?Definition
     {
