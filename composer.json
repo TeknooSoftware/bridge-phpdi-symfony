@@ -17,8 +17,8 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/TeknooSoftware/symfony-bridge/issues",
-        "source": "https://github.com/TeknooSoftware/symfony-bridge"
+        "issues": "https://github.com/TeknooSoftware/bridge-phpdi-symfony/issues",
+        "source": "https://github.com/TeknooSoftware/bridge-phpdi-symfony"
     },
     "funding": [
         {
