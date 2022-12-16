@@ -65,6 +65,7 @@ trait BridgeTrait
         foreach ($definitionsImport as $diKey => $sfKey) {
             $imports[$diKey] = get($sfKey);
         }
+
         $diBuilder->addDefinitions($imports);
 
         if (null !== $compilationPath) {

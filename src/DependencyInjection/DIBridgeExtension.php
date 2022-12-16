@@ -50,7 +50,7 @@ class DIBridgeExtension extends Extension
      * @param class-string<BridgeBuilder> $bridgeBuilderClass
      */
     public function __construct(
-        private string $bridgeBuilderClass = BridgeBuilder::class,
+        private readonly string $bridgeBuilderClass = BridgeBuilder::class,
     ) {
     }
 

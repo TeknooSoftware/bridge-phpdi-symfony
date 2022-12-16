@@ -87,8 +87,8 @@ class BridgeBuilder
     private bool $cacheEnabled = false;
 
     public function __construct(
-        private DIContainerBuilder $diBuilder,
-        private SfContainerBuilder $sfBuilder,
+        private readonly DIContainerBuilder $diBuilder,
+        private readonly SfContainerBuilder $sfBuilder,
     ) {
     }
 

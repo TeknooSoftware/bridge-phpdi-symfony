@@ -1,5 +1,12 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [5.2.0] - 2022-12-16
+### Stable Release
+- Fix some QA
+- Drop Support of PHP 8.0
+- Keep Support of LTS Symfony 5.4. Symfony 6.0 is not longuer supported but not forbidded in
+  composer.json to help upgrade fron Symfony 5.4
+
 ## [5.1.2] - 2022-08-06
 ### Stable Release
 - Update composer.json

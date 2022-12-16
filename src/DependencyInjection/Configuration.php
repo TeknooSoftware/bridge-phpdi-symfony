@@ -66,7 +66,7 @@ class Configuration implements ConfigurationInterface
                 ->arrayPrototype()
                     ->beforeNormalization()
                     ->ifString()
-                        ->then(fn ($v) => ['priority' => 0, 'file' => $v])
+                        ->then(static fn($v): array => ['priority' => 0, 'file' => $v])
                     ->end()
                     ->children()
                         ->integerNode('priority')->end()
