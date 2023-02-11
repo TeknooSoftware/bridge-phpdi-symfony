@@ -32,7 +32,7 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareControll
 /**
  * @coversNothing
  */
-class ContainerAwareTest extends AbstractFunctionalTest
+class ContainerAwareTests extends AbstractFunctionalTests
 {
     /**
      * @link https://github.com/PHP-DI/Symfony-Bridge/issues/2

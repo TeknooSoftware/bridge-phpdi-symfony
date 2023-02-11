@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [5.2.2] - 2023-02-11
+### Stable Release
+- Remove phpcpd and upgrade phpunit.xml and fix removed useful features in PHPUnit 10
+
 ## [5.2.1] - 2023-02-03
 ### Stable Release
 - Update dev libs to support PHPUnit 10 and remove unused phploc

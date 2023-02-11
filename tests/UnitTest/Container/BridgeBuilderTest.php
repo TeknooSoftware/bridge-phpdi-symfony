@@ -34,6 +34,7 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
@@ -44,6 +45,7 @@ use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+use function func_get_args;
 
 /**
  * @covers \Teknoo\DI\SymfonyBridge\Container\BridgeBuilder
@@ -385,34 +387,37 @@ class BridgeBuilderTest extends TestCase
         $this->getSfContainerBuilderMock()
             ->expects(self::exactly(4))
             ->method('setParameter')
-            ->withConsecutive(
-                [
-                    'entryAboutEnvironment',
-                    '%env(ENV_NAME)%',
-                ],
-                [
-                    'entryAboutString',
-                    'stringValue',
-                ],
-                [
-                    'entryAboutValue',
-                    'value',
-                ],
-                [
-                    'entryAboutArray',
+            ->willReturnCallback(
+                fn () => match (func_get_args()) {
                     [
-                        'key1' => 'value1',
-                        'key2' => [
-                            'key3' => 'value2',
-                            'key4' => 'value3',
-                        ],
-                        'key5' => [
-                            'key6' => [
-                                'key7' => 'value4',
+                        'entryAboutEnvironment',
+                        '%env(ENV_NAME)%',
+                    ] => true,
+                    [
+                        'entryAboutString',
+                        'stringValue',
+                    ] => true,
+                    [
+                        'entryAboutValue',
+                        'value',
+                    ] => true,
+                    [
+                        'entryAboutArray',
+                        [
+                            'key1' => 'value1',
+                            'key2' => [
+                                'key3' => 'value2',
+                                'key4' => 'value3',
+                            ],
+                            'key5' => [
+                                'key6' => [
+                                    'key7' => 'value4',
+                                ],
                             ],
                         ],
-                    ],
-                ],
+                    ] => true,
+                    default => throw new InvalidArgumentException('Invalid arguments'),
+                }
             );
 
         $this->getSfContainerBuilderMock()

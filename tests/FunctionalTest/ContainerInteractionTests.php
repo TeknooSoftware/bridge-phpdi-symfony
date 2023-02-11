@@ -37,7 +37,7 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
  *
  * @coversNothing
  */
-class ContainerInteractionTest extends AbstractFunctionalTest
+class ContainerInteractionTests extends AbstractFunctionalTests
 {
     public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDI()
     {

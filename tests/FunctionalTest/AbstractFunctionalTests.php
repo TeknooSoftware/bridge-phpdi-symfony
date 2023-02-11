@@ -30,7 +30,7 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 
-abstract class AbstractFunctionalTest extends TestCase
+abstract class AbstractFunctionalTests extends TestCase
 {
     protected static function clearCache()
     {

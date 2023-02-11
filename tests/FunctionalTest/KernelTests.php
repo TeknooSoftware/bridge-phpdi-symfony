@@ -34,7 +34,7 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareControll
 /**
  * @coversNothing
  */
-class KernelTest extends AbstractFunctionalTest
+class KernelTests extends AbstractFunctionalTests
 {
     public function testKernelShouldBoot()
     {
