@@ -41,6 +41,11 @@ use function is_iterable;
  * the loaded configuration, and a new PHPDI Container builder and the current instance of Symfony Container to
  * inject all PHP-DI's entries into Symfony's Container.
  *
+ * @copyright   Copyright (c) EIRL Richard Déloge (richarddeloge@gmail.com)
+ * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software)
+ *
+ * @link        http://teknoo.software/gd-text Project website
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

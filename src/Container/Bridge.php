@@ -39,6 +39,10 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  * The container configuration is done via the method `buildContainer` in the `BridgeTrait` used also by the
  * `BridgeBuilder` during the compilation of the Symfony Container.
  *
+ * @copyright   Copyright (c) EIRL Richard Déloge (richarddeloge@gmail.com)
+ * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software)
+ *
+ * @link        http://teknoo.software/gd-text Project website
  *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>

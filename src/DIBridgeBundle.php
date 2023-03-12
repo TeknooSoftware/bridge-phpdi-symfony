@@ -11,11 +11,10 @@
  * obtain it through the world-wide-web, please send an email
  * to richarddeloge@gmail.com so we can send you a copy immediately.
  *
- *
  * @copyright   Copyright (c) EIRL Richard Déloge (richarddeloge@gmail.com)
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software)
  *
- * @link        http://teknoo.software/bridge-phpdi-symfony Project website
+ * @link        http://teknoo.software/gd-text Project website
  *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>

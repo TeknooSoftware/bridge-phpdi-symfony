@@ -33,6 +33,12 @@ use Psr\Container\ContainerInterface as PsrContainerInterface;
  *  - `getKnownEntryNames()` to list all DI's entries defined in this container
  *  - `extractDefinition` to extract the DI's Definition object, used to create the factory will be injected into
  *    Symfony's container
+ *
+ * @copyright   Copyright (c) EIRL Richard Déloge (richarddeloge@gmail.com)
+ * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software)
+ *
+ * @link        http://teknoo.software/gd-text Project website
+ *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
  */

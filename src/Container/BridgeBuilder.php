@@ -44,6 +44,7 @@ use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
+use Teknoo\DI\SymfonyBridge\Container\Exception\InvalidContainerException;
 use Traversable;
 
 use function class_exists;
@@ -64,6 +65,11 @@ use function krsort;
  * Container with Bridge container as factory (Needed arguments and returned type are conserved and also passed to
  * Symfony). PHP-DI's References and Factories are also managed
  * Parameters injected into PHP-DI as String, Values, Array and EnvVar are also imported into Symfony's Container
+ *
+ * @copyright   Copyright (c) EIRL Richard Déloge (richarddeloge@gmail.com)
+ * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software)
+ *
+ * @link        http://teknoo.software/gd-text Project website
  *
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richarddeloge@gmail.com>
@@ -157,7 +163,7 @@ class BridgeBuilder
         );
 
         if (!$container instanceof ContainerInterface) {
-            throw new RuntimeException('Error bad container needed');
+            throw new InvalidContainerException('Error, invalid container type, need a ' . ContainerInterface::class);
         }
 
         return $container;
