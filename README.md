@@ -58,12 +58,12 @@ To install this library with composer, run this command :
 
 This library requires :
 
-    * PHP 8.0+
+    * PHP 8.1+
     * A PHP autoloader (Composer is recommended)
     * PHP-DI.
-    * Symfony/dependency-injection.
-    * Symfony/http-kernel.
-    * Symfony/config
+    * Symfony/dependency-injection 5.4 or 6.2+.
+    * Symfony/http-kernel 5.4 or 6.2+.
+    * Symfony/config 5.4 or 6.2+.
 
 Credits
 -------
