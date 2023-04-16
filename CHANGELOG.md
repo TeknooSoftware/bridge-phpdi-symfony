@@ -1,5 +1,11 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [5.2.4] - 2023-04-16
+### Stable Release
+- Update dev lib requirements
+- Support PHPUnit 10.1+
+- Migrate phpunit.xml
+
 ## [5.2.3] - 2023-03-12
 ### Stable Release
 - Q/A
