@@ -51,6 +51,7 @@ class Bridge implements ContainerInterface
     private ?DIContainer $diContainer = null;
 
     /**
+     * @param DIContainerBuilder<DIContainer> $diBuilder
      * @param iterable<string> $definitionsFiles
      * @param array<string, string> $definitionsImport
      */

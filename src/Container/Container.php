@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace Teknoo\DI\SymfonyBridge\Container;
 
 use DI\Container as DIContainer;
+use DI\Definition\Definition;
 use DI\Definition\Source\MutableDefinitionSource;
 use DI\Proxy\ProxyFactory;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
@@ -45,17 +46,22 @@ class Container extends DIContainer implements ContainerInterface
 {
     use ContainerDefinitionTrait;
 
+    /**
+     * @param array<Definition>|MutableDefinitionSource $definitions
+     */
     public function __construct(
-        ?MutableDefinitionSource $definitionSource = null,
+        array|MutableDefinitionSource $definitions = [],
         ?ProxyFactory $proxyFactory = null,
         ?PsrContainerInterface $wrapperContainer = null,
     ) {
         parent::__construct(
-            $definitionSource,
+            $definitions,
             $proxyFactory,
-            $wrapperContainer
+            $wrapperContainer,
         );
 
-        $this->originalDefinitions = $definitionSource;
+        if ($definitions instanceof MutableDefinitionSource) {
+            $this->originalDefinitions = $definitions;
+        }
     }
 }

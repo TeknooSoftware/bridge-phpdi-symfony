@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace Teknoo\DI\SymfonyBridge\Container;
 
 use Closure;
+use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
@@ -38,7 +39,6 @@ use DI\Definition\ValueDefinition;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionObject;
-use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
@@ -89,6 +89,9 @@ class BridgeBuilder
 
     private bool $cacheEnabled = false;
 
+    /**
+     * @param DIContainerBuilder<DIContainer> $diBuilder
+     */
     public function __construct(
         private readonly DIContainerBuilder $diBuilder,
         private readonly SfContainerBuilder $sfBuilder,
