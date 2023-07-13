@@ -6,7 +6,7 @@
 - Drop support of Symfony 5.4
 
 ## [6.0.0-beta1] - 2023-07-12
-### Betq Release
+### Beta Release
 - Support PHP-DI 7.0 and later
 - Drop support of Symfony 5.4
 
