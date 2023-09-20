@@ -163,7 +163,9 @@ class BridgeBuilder
         );
 
         if (!$container instanceof ContainerInterface) {
-            throw new InvalidContainerException('Error, invalid container type, need a ' . ContainerInterface::class);
+            throw new InvalidContainerException(
+                'PHP-DI Bridge : Error, invalid container type, need a ' . ContainerInterface::class
+            );
         }
 
         return $container;
@@ -227,7 +229,7 @@ class BridgeBuilder
             return $diDefinition ?? $diReference;
         }
 
-        throw new ServiceNotFoundException("Service $entryName is not available in PHP-DI Container");
+        throw new ServiceNotFoundException("PHP-DI Bridge : Service $entryName is not available in PHP-DI Container");
     }
 
     private function getClassFromFactory(FactoryDefinition $definition): string
@@ -248,13 +250,13 @@ class BridgeBuilder
             //Is internal function or a closure
             $reflectionMethod = new ReflectionFunction($callable);
         } else {
-            throw new SfRuntimeException("Callable not supported for '$definitionName'");
+            throw new SfRuntimeException("PHP-DI Bridge : Callable not supported for '$definitionName'");
         }
 
         $returnType = $reflectionMethod->getReturnType();
         if (!$returnType instanceof ReflectionNamedType) {
             throw new SfRuntimeException(
-                "Missing a return type or non \ReflectionNamedType from Reflection for '$definitionName'"
+                "PHP-DI Bridge : Missing a return type or non ReflectionNamedType from Reflection for '$definitionName'"
             );
         }
 

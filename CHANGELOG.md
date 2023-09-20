@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.0.1] - 2023-09-20
+### Stable Release
+- Improve error message to simplify debug 
+
 ## [6.0.0] - 2023-07-13
 ### Stable Release
 - Support PHP-DI 7.0 and later
