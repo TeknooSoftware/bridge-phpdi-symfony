@@ -7,8 +7,5 @@ parameters:
             message: '#BridgeBuilder::loadDefinition\(\)#'
             path: src/DependencyInjection/DIBridgeExtension.php
         -
-            message: '#Method [a-zA-Z0-9\\_]+::extractDIDefinition\(\) should return [a-zA-Z0-9\\_]+ but returns [a-zA-Z0-9\\_]+\|null#'
-            path: src/Container/BridgeBuilder.php
-        -
             message: '#Container::setParameter#'
             path: src/Container/BridgeBuilder.php
