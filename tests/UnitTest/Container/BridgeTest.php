@@ -32,6 +32,7 @@ use Symfony\Component\DependencyInjection\Container as SfContainer;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
+use function interface_exists;
 
 /**
  * @covers \Teknoo\DI\SymfonyBridge\Container\Bridge
@@ -176,6 +177,12 @@ class BridgeTest extends TestCase
 
     public function testInvokeWhenTheServiceIdWasFoundAndIsContainerAware()
     {
+        if (!interface_exists(ContainerAwareInterface::class)) {
+            self::markTestSkipped('Test only for Symfony prior to 7');
+
+            return;
+        }
+
         $container = $this->createMock(DIContainer::class);
 
         $container->expects(self::once())

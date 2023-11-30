@@ -32,6 +32,8 @@ use Symfony\Component\DependencyInjection\Container as SfContainer;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
+use function interface_exists;
+
 /**
  * PSR `ContainerInterface` implementation as bridge between Symfony's container and PHP-DI container.
  * For PHP-DI, this container will be injected as Fallback container.
@@ -98,9 +100,11 @@ class Bridge implements ContainerInterface
         if ($diContainer->has($id)) {
             $object = $diContainer->get($id);
 
-            if ($object instanceof ContainerAwareInterface) {
+            // @codeCoverageIgnoreStart
+            if (interface_exists(ContainerAwareInterface::class) && $object instanceof ContainerAwareInterface) {
                 $object->setContainer($this->sfContainer);
             }
+            // @codeCoverageIgnoreEnd
 
             return $object;
         }
