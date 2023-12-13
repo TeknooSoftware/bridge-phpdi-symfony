@@ -78,7 +78,7 @@ This library requires :
     * PHP-DI.
     * Symfony/dependency-injection 5.4 or 6.2+.
     * Symfony/http-kernel 5.4 or 6.2+.
-    * Symfony/config 5.4 or 6.2+.
+    * Symfony/config 6.3, 6.4 or 7+.
 
 Contribute :)
 -------------
