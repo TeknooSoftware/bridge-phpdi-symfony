@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.0.5] - 2024-01-17
+### Stable Release
+- Default value for environments variables are also injected into the Symfony DI
+
 ## [6.0.4] - 2023-11-29
 ### Stable Release
 - Support Symfony 7+

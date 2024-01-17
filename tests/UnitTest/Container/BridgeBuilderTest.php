@@ -308,12 +308,13 @@ class BridgeBuilderTest extends TestCase
                 'entryAboutFactoryInvokable',
                 'entryAboutFactoryMethod',
                 'entryAboutEnvironment',
+                'entryAboutEnvironmentWithDefault',
                 'entryAboutString',
                 'entryAboutValue',
                 'entryAboutArray',
             ]);
 
-        $container->expects(self::exactly(12))
+        $container->expects(self::exactly(13))
             ->method('extractDefinition')
             ->willReturnMap([
                 [\DateTime::class, (new ObjectDefinition(\DateTime::class, \DateTime::class))],
@@ -345,6 +346,10 @@ class BridgeBuilderTest extends TestCase
                 [
                     'entryAboutEnvironment',
                     (new EnvironmentVariableDefinition('ENV_NAME'))
+                ],
+                [
+                    'entryAboutEnvironmentWithDefault',
+                    (new EnvironmentVariableDefinition('ENV_NAME', true, 'foo'))
                 ],
                 [
                     'entryAboutString',
@@ -385,13 +390,21 @@ class BridgeBuilderTest extends TestCase
             ->willReturn($this->createMock(Alias::class));
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::exactly(4))
+            ->expects(self::exactly(6))
             ->method('setParameter')
             ->willReturnCallback(
                 fn () => match (func_get_args()) {
                     [
                         'entryAboutEnvironment',
                         '%env(ENV_NAME)%',
+                    ] => true,
+                    [
+                        BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryAboutEnvironmentWithDefault',
+                        'foo',
+                    ] => true,
+                    [
+                        'entryAboutEnvironmentWithDefault',
+                        '%env(default:' . BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryAboutEnvironmentWithDefault:ENV_NAME)%',
                     ] => true,
                     [
                         'entryAboutString',

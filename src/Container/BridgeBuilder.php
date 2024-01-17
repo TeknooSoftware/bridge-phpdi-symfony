@@ -75,6 +75,8 @@ class BridgeBuilder
 {
     use BridgeTrait;
 
+    public const PREFIX_FOR_DEFAULT_ENV_VALUE = 'di_bridge_default_';
+
     /**
      * @var array<string, array{priority?:int, file:string}>
      */
@@ -309,7 +311,16 @@ class BridgeBuilder
         }
 
         if ($diDefinition instanceof EnvironmentVariableDefinition) {
-            $this->setParameter($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
+            if ($diDefinition->isOptional()) {
+                $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
+                $this->setParameter($defaultEntryName, $diDefinition->getDefaultValue());
+                $this->setParameter(
+                    $entryName,
+                    '%env(default:' . $defaultEntryName . ':' . $diDefinition->getVariableName() . ')%',
+                );
+            } else {
+                $this->setParameter($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
+            }
 
             return;
         }
