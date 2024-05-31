@@ -1,5 +1,10 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.0.6] - 2024-05-31
+### Stable Release
+- Fix deprecated : replace `Symfony\Component\HttpKernel\DependencyInjection\Extension`
+        by `Symfony\Component\DependencyInjection\Extension\Extension`
+
 ## [6.0.5] - 2024-01-17
 ### Stable Release
 - Default value for environments variables are also injected into the Symfony DI
