@@ -27,7 +27,7 @@ namespace Teknoo\DI\SymfonyBridge\DependencyInjection;
 
 use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Symfony\Component\DependencyInjection\Extension\Extension;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
 
