@@ -71,7 +71,7 @@ use function krsort;
  * @license     http://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richard@teknoo.software>
  */
-class BridgeBuilder
+class BridgeBuilder implements BridgeBuilderInterface
 {
     use BridgeTrait;
 

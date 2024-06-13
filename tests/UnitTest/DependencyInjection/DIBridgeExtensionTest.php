@@ -25,16 +25,14 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension;
 use TypeError;
 
-/**
- * @covers \Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension
- */
+#[CoversClass(DIBridgeExtension::class)]
 class DIBridgeExtensionTest extends TestCase
 {
     private ?ContainerBuilder $container = null;
@@ -53,8 +51,7 @@ class DIBridgeExtensionTest extends TestCase
 
     public function buildInstance(): DIBridgeExtension
     {
-        $mock = $this->createMock(BridgeBuilder::class);
-        return new DIBridgeExtension($mock::class);
+        return new DIBridgeExtension(BuilderFake::class);
     }
 
     public function testLoadWithoutDefinitionsAndImport()

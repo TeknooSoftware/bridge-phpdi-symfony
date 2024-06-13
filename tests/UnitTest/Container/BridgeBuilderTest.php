@@ -35,6 +35,8 @@ use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
@@ -44,13 +46,12 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
+use Teknoo\DI\SymfonyBridge\Container\BridgeTrait;
 use Teknoo\DI\SymfonyBridge\Container\Container;
 use function func_get_args;
 
-/**
- * @covers \Teknoo\DI\SymfonyBridge\Container\BridgeBuilder
- * @covers \Teknoo\DI\SymfonyBridge\Container\BridgeTrait
- */
+#[CoversTrait(BridgeTrait::class)]
+#[CoversClass(BridgeBuilder::class)]
 class BridgeBuilderTest extends TestCase
 {
     private ?DIContainerBuilder $diBuilder = null;
@@ -159,7 +160,7 @@ class BridgeBuilderTest extends TestCase
         $container = $this->createMock(DIContainer::class);
 
         $this->getDiBuilderMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -174,23 +175,23 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotFound',
             ]);
 
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('extractDefinition')
             ->willReturn(null);
 
         $this->getDiBuilderMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('addDefinitions');
 
         $this->expectException(ServiceNotFoundException::class);
@@ -212,13 +213,13 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotSupportedFactory',
             ]);
 
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('extractDefinition')
             ->willReturn(
                 (new FactoryDefinition(
@@ -228,12 +229,12 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->getDiBuilderMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('addDefinitions');
 
         $this->expectException(\RuntimeException::class);
@@ -255,13 +256,13 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotSupportedFactory',
             ]);
 
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('extractDefinition')
             ->willReturn(
                 (new FactoryDefinition(
@@ -271,12 +272,12 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->getDiBuilderMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('addDefinitions');
 
         $this->expectException(\RuntimeException::class);
@@ -296,7 +297,7 @@ class BridgeBuilderTest extends TestCase
         bool $enableCache
     ) {
         $container = $this->createMock(Container::class);
-        $container->expects(self::any())
+        $container->expects($this->any())
             ->method('getKnownEntryNames')
             ->willReturn([
                 \DateTimeInterface::class,
@@ -314,7 +315,7 @@ class BridgeBuilderTest extends TestCase
                 'entryAboutArray',
             ]);
 
-        $container->expects(self::exactly(13))
+        $container->expects($this->exactly(13))
             ->method('extractDefinition')
             ->willReturnMap([
                 [\DateTime::class, (new ObjectDefinition(\DateTime::class, \DateTime::class))],
@@ -379,18 +380,18 @@ class BridgeBuilderTest extends TestCase
             ]);
 
         $this->getDiBuilderMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('setAlias')
             ->with('aliasInSymfony', 'symfonyService')
             ->willReturn($this->createMock(Alias::class));
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::exactly(6))
+            ->expects($this->exactly(6))
             ->method('setParameter')
             ->willReturnCallback(
                 fn () => match (func_get_args()) {
@@ -434,7 +435,7 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->getSfContainerBuilderMock()
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('addDefinitions')
             ->with(
                 [

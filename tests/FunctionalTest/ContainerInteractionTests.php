@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use DI\Definition\Source\SourceCache;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
@@ -35,8 +36,8 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
  * Tests interactions between containers, i.e. entries that reference other entries in
  * other containers.
  *
- * @coversNothing
  */
+#[CoversNothing]
 class ContainerInteractionTests extends AbstractFunctionalTests
 {
     public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDI()

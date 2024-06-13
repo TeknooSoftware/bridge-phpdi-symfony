@@ -25,13 +25,12 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Teknoo\DI\SymfonyBridge\DependencyInjection\Configuration;
 
-/**
- * @covers \Teknoo\DI\SymfonyBridge\DependencyInjection\Configuration
- */
+#[CoversClass(Configuration::class)]
 class ConfigurationTest extends TestCase
 {
     public function buildInstance(): Configuration

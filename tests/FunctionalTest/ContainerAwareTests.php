@@ -27,11 +27,10 @@ declare(strict_types=1);
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use DI\Definition\Source\SourceCache;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
 
-/**
- * @coversNothing
- */
+#[CoversNothing]
 class ContainerAwareTests extends AbstractFunctionalTests
 {
     /**

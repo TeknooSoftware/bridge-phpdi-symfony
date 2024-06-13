@@ -28,13 +28,14 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 use DI\Definition\Definition;
 use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use Teknoo\DI\SymfonyBridge\Container\CompiledContainer;
+use Teknoo\DI\SymfonyBridge\Container\ContainerDefinitionTrait;
 
-/**
- * @covers \Teknoo\DI\SymfonyBridge\Container\CompiledContainer
- * @covers \Teknoo\DI\SymfonyBridge\Container\ContainerDefinitionTrait
- */
+#[CoversClass(CompiledContainer::class)]
+#[CoversTrait(ContainerDefinitionTrait::class)]
 class CompiledContainerTest extends TestCase
 {
     private ?MutableDefinitionSource $originalDefinitions = null;
@@ -72,7 +73,7 @@ class CompiledContainerTest extends TestCase
     public function testExtractDefinitionWhenNoThereAreNotFound()
     {
         $this->getMutableDefinitionSourceMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('getDefinition')
             ->willThrowException(new InvalidDefinition());
 
@@ -82,7 +83,7 @@ class CompiledContainerTest extends TestCase
     public function testExtractDefinition()
     {
         $this->getMutableDefinitionSourceMock()
-            ->expects(self::any())
+            ->expects($this->any())
             ->method('getDefinition')
             ->willReturn($this->createMock(Definition::class));
 
