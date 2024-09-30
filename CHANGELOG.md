@@ -1,5 +1,17 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.1.0-beta1] - 2024-09-30
+New behavior to register extensions (from the service container or directly it's class name) to allow customize or
+alter the PHP-DI Bridge (and the PHP-DI) configuration in an application, without editing configurations files,
+use full to create extension for your sold symfonys applications.
+    - Add `Teknoo\DI\SymfonyBridge\Extension\ExtensionInterface`
+    - Add new key unter `di_bridge` : `extensions`:
+
+        extensions:
+            - 'service name or class name' #Option 1
+            - name: 'service name or class name' #Option 2
+              priority: 10
+
 ## [6.0.6] - 2024-05-31
 ### Stable Release
 - Fix deprecated : replace `Symfony\Component\HttpKernel\DependencyInjection\Extension`
