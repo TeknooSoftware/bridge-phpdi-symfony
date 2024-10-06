@@ -36,7 +36,6 @@ use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
@@ -46,11 +45,10 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
-use Teknoo\DI\SymfonyBridge\Container\BridgeTrait;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+
 use function func_get_args;
 
-#[CoversTrait(BridgeTrait::class)]
 #[CoversClass(BridgeBuilder::class)]
 class BridgeBuilderTest extends TestCase
 {

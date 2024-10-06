@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.1.0-beta2] - 2024-10-06
+### Stable Release
+- Update dev lib requirements
+
 ## [6.1.0-beta1] - 2024-09-30
 New behavior to register extensions (from the service container or directly it's class name) to allow customize or
 alter the PHP-DI Bridge (and the PHP-DI) configuration in an application, without editing configurations files,
