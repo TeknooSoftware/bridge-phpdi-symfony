@@ -4,8 +4,5 @@ parameters:
             message: '#Call to an undefined method [a-zA-Z0-9\\_]+::children\(\)#'
             path: src/DependencyInjection/Configuration.php
         -
-            message: '#BridgeBuilder::loadDefinition\(\)#'
-            path: src/DependencyInjection/DIBridgeExtension.php
-        -
             message: '#Container::setParameter#'
             path: src/Container/BridgeBuilder.php

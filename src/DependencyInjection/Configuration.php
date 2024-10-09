@@ -40,7 +40,12 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  *              - 'list of PHP-DI definitions file, you can use Symfony joker like %kernel.project_dir%'
  *              #example
  *              - '%kernel.project_dir%/vendor/editor_name/package_name/src/di.php'
- *              - '%kernel.project_dir%/config/di.php'
+ *              - file: '%kernel.project_dir%/config/di.php'
+ *                priority: 10
+ *          extensions:
+ *              - 'service name or class name'
+ *               - name: 'service name or class name'
+ *                 priority: 10
  *          import: #Optional
  *              #To make alias from SF entries into PHPDI
  *              My\Class\Name: 'symfony.contaner.entry.name'
@@ -80,6 +85,18 @@ class Configuration implements ConfigurationInterface
                 ->useAttributeAsKey('name')
                 ->scalarPrototype()->end()
             ->end() //import
+            ->arrayNode('extensions')
+                ->arrayPrototype()
+                    ->beforeNormalization()
+                    ->ifString()
+                        ->then(static fn($v): array => ['priority' => 0, 'name' => $v])
+                    ->end()
+                    ->children()
+                        ->integerNode('priority')->end()
+                        ->scalarNode('name')->end()
+                    ->end()
+                ->end()
+            ->end() //extensions
         ->end();
 
         return $treeBuilder;

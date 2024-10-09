@@ -143,6 +143,7 @@ class BridgeBuilder implements BridgeBuilderInterface
             $toOrder[(int) ($definitionFile['priority'] ?? 0)][] = $definitionFile['file'];
         }
 
+        unset($definitionFile);
         krsort($toOrder);
 
         //Can not use yield from with iterator_to_array, skip first entries

@@ -30,6 +30,8 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension;
+use Teknoo\DI\SymfonyBridge\Extension\InvalidExtensionException;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection\Support\ExtensionMock;
 use TypeError;
 
 #[CoversClass(DIBridgeExtension::class)]
@@ -93,6 +95,107 @@ class DIBridgeExtensionTest extends TestCase
                 ],
                 $this->getContainerBuilderMock()
             )
+        );
+    }
+
+    public function testLoadWithExtensions()
+    {
+        $mock = $this->getContainerBuilderMock();
+        $mock->expects($this->exactly(2))
+            ->method('has')
+            ->willReturnMap([
+                ['ext-foo', true],
+                [ExtensionMock::class, false]
+            ]);
+
+        $ext = ExtensionMock::create();
+        $ext->counter = 0;
+
+        $mock->expects($this->once())
+            ->method('get')
+            ->with('ext-foo')
+            ->willReturn($ext);
+
+        self::assertInstanceOf(
+            DIBridgeExtension::class,
+            $this->buildInstance()->load(
+                [
+                    [
+                        'compilation_path' => '/foo/bar',
+                        'enable_cache' => true,
+                        'definitions' => ['foo', 'bar'],
+                        'import' => ['hello' => 'world'],
+                        'extensions' => [
+                            'ext-foo',
+                            [
+                                'priority' => 1,
+                                'name' => ExtensionMock::class
+                            ]
+                        ]
+                    ]
+                ],
+                $mock
+            )
+        );
+
+        self::assertEquals(2, $ext->counter);
+    }
+
+    public function testExceptionOnLoadWithExtensionsWithInvalidService()
+    {
+        $mock = $this->getContainerBuilderMock();
+        $mock->expects($this->exactly(1))
+            ->method('has')
+            ->willReturnMap([
+                ['ext-foo', true],
+            ]);
+
+        $mock->expects($this->once())
+            ->method('get')
+            ->with('ext-foo')
+            ->willReturn(new \stdClass());
+
+        $this->expectException(InvalidExtensionException::class);
+        $this->buildInstance()->load(
+            [
+                [
+                    'compilation_path' => '/foo/bar',
+                    'enable_cache' => true,
+                    'definitions' => ['foo', 'bar'],
+                    'import' => ['hello' => 'world'],
+                    'extensions' => [
+                        'ext-foo',
+                    ]
+                ]
+            ],
+            $mock
+        );
+    }
+
+    public function testExceptionOnLoadWithExtensionsWithInvalidClass()
+    {
+        $mock = $this->getContainerBuilderMock();
+        $mock->expects($this->exactly(1))
+            ->method('has')
+            ->willReturn(false);
+
+        $mock->expects($this->never())
+            ->method('get');
+
+        $this->expectException(InvalidExtensionException::class);
+        $this->buildInstance()->load(
+            [
+                [
+                    'compilation_path' => '/foo/bar',
+                    'enable_cache' => true,
+                    'definitions' => ['foo', 'bar'],
+                    'import' => ['hello' => 'world'],
+                    'extensions' => [
+                        \stdClass::class,
+                    ]
+                ]
+            ],
+            $mock
         );
     }
 

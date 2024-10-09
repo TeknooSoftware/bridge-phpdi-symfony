@@ -28,17 +28,14 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
-use Teknoo\DI\SymfonyBridge\Container\BridgeTrait;
 
 use function interface_exists;
 
-#[CoversTrait(BridgeTrait::class)]
 #[CoversClass(Bridge::class)]
 class BridgeTest extends TestCase
 {

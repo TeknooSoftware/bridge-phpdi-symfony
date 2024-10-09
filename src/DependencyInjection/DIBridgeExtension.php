@@ -29,12 +29,13 @@ use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
+use Teknoo\DI\SymfonyBridge\Container\BridgeBuilderInterface;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+use Teknoo\DI\SymfonyBridge\Extension\ExtensionInterface as BridgeExtensionInterface;
+use Teknoo\DI\SymfonyBridge\Extension\InvalidExtensionException;
 
-use function is_string;
-use function is_scalar;
-use function is_array;
-use function is_iterable;
+use function class_exists;
+use function is_a;
 
 /**
  * Symfony Bundle extension to parse configuration defined in `Configuration` and initialize the Bridge Builder with
@@ -57,9 +58,106 @@ class DIBridgeExtension extends Extension
     }
 
     /**
-     * @param array<string, string|array<string>> $configuration
+     * @param array<string, string> $configuration
      */
-    private function initializePHPDI(array $configuration, SymfonyContainerBuilder $container): void
+    private function configurePHPDI(array &$configuration, BridgeBuilderInterface $builder): void
+    {
+        if (!empty($configuration['compilation_path'])) {
+            $builder->prepareCompilation(
+                $configuration['compilation_path']
+            );
+        }
+
+        if (isset($configuration['enable_cache'])) {
+            $builder->enableCache(
+                !empty($configuration['enable_cache'])
+            );
+        }
+    }
+
+    /**
+     * @param array<string, array<array{priority?:int, file:string}>> $configuration
+     */
+    private function processDefinitions(array &$configuration, BridgeBuilderInterface $builder): void
+    {
+        if (empty($configuration['definitions'])) {
+            return;
+        }
+
+        $builder->loadDefinition(
+            $configuration['definitions']
+        );
+    }
+
+    /**
+     * @param array<string, array<string, string>> $configuration
+     */
+    private function processImport(array &$configuration, BridgeBuilderInterface $builder): void
+    {
+        if (empty($configuration['import'])) {
+            return;
+        }
+
+        foreach ($configuration['import'] as $diKey => $sfKey) {
+            $builder->import($diKey, $sfKey);
+        }
+    }
+
+    /**
+     * @param array<string, array<array{priority?:int, name:string}>> $configuration
+     */
+    private function processExtensions(
+        SymfonyContainerBuilder $container,
+        array &$configuration,
+        BridgeBuilderInterface $builder
+    ): void {
+        if (empty($configuration['extensions'])) {
+            return;
+        }
+
+        $toOrder = [];
+        foreach ($configuration['extensions'] as $extensionConfiguration) {
+            $toOrder[(int) ($extensionConfiguration['priority'] ?? 0)][] = $extensionConfiguration['name'];
+        }
+
+        unset($extensionConfiguration);
+        krsort($toOrder);
+
+        foreach ($toOrder as &$namesList) {
+            foreach ($namesList as $name) {
+                if ($container->has($name)) {
+                    $extension = $container->get($name);
+
+                    if (!$extension instanceof BridgeExtensionInterface) {
+                        throw new InvalidExtensionException(
+                            $extension::class . ' is not an implementation of ' . BridgeExtensionInterface::class
+                        );
+                    }
+
+                    $extension->configure($builder);
+
+                    continue;
+                }
+
+                if (class_exists($name, true) && is_a($name, BridgeExtensionInterface::class, true)) {
+                    $extension = $name::create();
+
+                    $extension->configure($builder);
+
+                    continue;
+                }
+
+                throw new InvalidExtensionException(
+                    $name . ' does not exist or is not an implementation of ' . BridgeExtensionInterface::class
+                );
+            }
+        }
+    }
+
+    /**
+     * @param array<string, string|array<string|string>> $configuration
+     */
+    private function initializePHPDI(array &$configuration, SymfonyContainerBuilder $container): void
     {
         $bridgeBuilderClass = $this->bridgeBuilderClass;
         $builder = new $bridgeBuilderClass(
@@ -67,35 +165,19 @@ class DIBridgeExtension extends Extension
             $container
         );
 
-        if (!empty($configuration['compilation_path']) && is_string($configuration['compilation_path'])) {
-            $builder->prepareCompilation(
-                $configuration['compilation_path']
-            );
-        }
+        $this->configurePHPDI($configuration, $builder);
 
-        if (isset($configuration['enable_cache'])  && is_scalar($configuration['enable_cache'])) {
-            $builder->enableCache(
-                !empty($configuration['enable_cache'])
-            );
-        }
+        $this->processDefinitions($configuration, $builder);
 
-        if (!empty($configuration['definitions']) && is_array($configuration['definitions'])) {
-            $builder->loadDefinition(
-                $configuration['definitions']
-            );
-        }
+        $this->processImport($configuration, $builder);
 
-        if (!empty($configuration['import']) && is_iterable($configuration['import'])) {
-            foreach ($configuration['import'] as $diKey => $sfKey) {
-                $builder->import($diKey, $sfKey);
-            }
-        }
+        $this->processExtensions($container, $configuration, $builder);
 
         $builder->initializeSymfonyContainer();
     }
 
     /**
-     * @param array<string, string|array<string>> $configs
+     * @param array<string, string|array<string|array<string>>> $configs
      */
     public function load(array $configs, SymfonyContainerBuilder $container): self
     {
