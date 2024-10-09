@@ -29,13 +29,10 @@ use DI\Definition\Definition;
 use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use Teknoo\DI\SymfonyBridge\Container\Container;
-use Teknoo\DI\SymfonyBridge\Container\ContainerDefinitionTrait;
 
 #[CoversClass(Container::class)]
-#[CoversTrait(ContainerDefinitionTrait::class)]
 class ContainerTest extends TestCase
 {
     private ?MutableDefinitionSource $originalDefinitions = null;
