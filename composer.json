@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Userfriendly integration of PHP-DI with Symfony, Fork from php-di/symfony-bridge",
     "keywords": ["symfony", "phpdi", "di", "bridge"],
-    "homepage": "http://teknoo.software/bridge-phpdi-symfony",
+    "homepage": "https://teknoo.software/libraries/php-di-symfony-bridge",
     "license": "MIT",
     "authors": [
         {

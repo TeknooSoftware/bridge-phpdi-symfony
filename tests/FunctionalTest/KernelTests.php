@@ -16,9 +16,9 @@
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
  * @copyright Matthieu Napoli (http://mnapoli.fr/)
  *
- * @link        http://teknoo.software/bridge-phpdi-symfony Project website
+ * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     http://teknoo.software/license/mit         MIT License
+ * @license     https://teknoo.software/license/mit         MIT License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
