@@ -1,5 +1,14 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [6.1.1] - 2025-02-07
+### Stable Release
+- Update dev lib requirements
+    - Require Symfony libraries 6.4 or 7.2
+    - Update to PHPUnit 12
+- Drop support of PHP 8.2
+    - The library stay usable with PHP 8.2, without any waranties and tests
+    - In the next major release, Support of PHP 8.2 will be dropped
+
 ## [6.1.0] - 2024-10-09
 New behavior to register extensions (from the service container or directly it's class name) to allow customize or
 alter the PHP-DI Bridge (and the PHP-DI) configuration in an application, without editing configurations files,
