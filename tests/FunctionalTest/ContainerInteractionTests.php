@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -18,7 +18,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -40,7 +40,7 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
 #[CoversNothing]
 class ContainerInteractionTests extends AbstractFunctionalTests
 {
-    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDI()
+    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDI(): void
     {
         //Class 2 is defined in Symfony
         //Class 1 is defined in PHP DI
@@ -51,20 +51,20 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class1::class);
 
-        self::assertInstanceOf(Class1::class, $class1);
+        $this->assertInstanceOf(Class1::class, $class1);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntries()
+    public function testPhpdiAliasesCanReferenceSymfonyEntries(): void
     {
         $kernel = $this->createKernel('class2.yml');
         $container = $kernel->getContainer();
 
         $class2 = $container->get('class2Alias');
 
-        self::assertInstanceOf(Class2::class, $class2);
+        $this->assertInstanceOf(Class2::class, $class2);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImport()
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImport(): void
     {
         //Class 2 is defined in Symfony
         //Class 3 is defined in PHP DI
@@ -75,10 +75,10 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class3::class);
 
-        self::assertInstanceOf(Class3::class, $class1);
+        $this->assertInstanceOf(Class3::class, $class1);
     }
 
-    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDIWithCache()
+    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDIWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -93,10 +93,10 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class1::class);
 
-        self::assertInstanceOf(Class1::class, $class1);
+        $this->assertInstanceOf(Class1::class, $class1);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntriesWithCache()
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -107,10 +107,10 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class2 = $container->get('class2Alias');
 
-        self::assertInstanceOf(Class2::class, $class2);
+        $this->assertInstanceOf(Class2::class, $class2);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImportWithCache()
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImportWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -125,10 +125,10 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class3::class);
 
-        self::assertInstanceOf(Class3::class, $class1);
+        $this->assertInstanceOf(Class3::class, $class1);
     }
 
-    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDIWithCompilation()
+    public function testPhpdiShouldGetEntriesFromSymfonyToConstructAndSymfonyGetInPHPDIWithCompilation(): void
     {
         //Class 2 is defined in Symfony
         //Class 1 is defined in PHP DI
@@ -139,20 +139,20 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class1::class);
 
-        self::assertInstanceOf(Class1::class, $class1);
+        $this->assertInstanceOf(Class1::class, $class1);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntriesWithCompilation()
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesWithCompilation(): void
     {
         $kernel = $this->createKernel('class2_with_compilation.yml');
         $container = $kernel->getContainer();
 
         $class2 = $container->get('class2Alias');
 
-        self::assertInstanceOf(Class2::class, $class2);
+        $this->assertInstanceOf(Class2::class, $class2);
     }
 
-    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImportWithCompilation()
+    public function testPhpdiAliasesCanReferenceSymfonyEntriesFromImportWithCompilation(): void
     {
         //Class 2 is defined in Symfony
         //Class 3 is defined in PHP DI
@@ -163,6 +163,6 @@ class ContainerInteractionTests extends AbstractFunctionalTests
 
         $class1 = $kernel->getContainer()->get(Class3::class);
 
-        self::assertInstanceOf(Class3::class, $class1);
+        $this->assertInstanceOf(Class3::class, $class1);
     }
 }

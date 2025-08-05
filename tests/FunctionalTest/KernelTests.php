@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -18,7 +18,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -35,14 +35,14 @@ use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareControll
 #[CoversNothing]
 class KernelTests extends AbstractFunctionalTests
 {
-    public function testKernelShouldBoot()
+    public function testKernelShouldBoot(): void
     {
         $kernel = $this->createKernel('empty.yml');
 
-        self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
+        $this->assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
     }
 
-    public function testKernelShouldBootWithCache()
+    public function testKernelShouldBootWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -50,25 +50,25 @@ class KernelTests extends AbstractFunctionalTests
 
         $kernel = $this->createKernel('empty_with_cache.yml');
 
-        self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
+        $this->assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
     }
 
-    public function testKernelShouldBootWithCompilation()
+    public function testKernelShouldBootWithCompilation(): void
     {
         $kernel = $this->createKernel('empty_with_compilation.yml');
 
-        self::assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
+        $this->assertInstanceOf(ContainerInterface::class, $kernel->getContainer());
     }
 
-    public function testSymfonyShouldResolveClassesFromYaml()
+    public function testSymfonyShouldResolveClassesFromYaml(): void
     {
         $kernel = $this->createKernel('class2.yml');
 
         $object = $kernel->getContainer()->get('class2');
-        self::assertInstanceOf(Class2::class, $object);
+        $this->assertInstanceOf(Class2::class, $object);
     }
 
-    public function testSymfonyShouldResolveClassesFromYamlWithCache()
+    public function testSymfonyShouldResolveClassesFromYamlWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -77,26 +77,26 @@ class KernelTests extends AbstractFunctionalTests
         $kernel = $this->createKernel('class2_with_cache.yml');
 
         $object = $kernel->getContainer()->get('class2');
-        self::assertInstanceOf(Class2::class, $object);
+        $this->assertInstanceOf(Class2::class, $object);
     }
 
-    public function testSymfonyShouldResolveClassesFromYamlWithCompilation()
+    public function testSymfonyShouldResolveClassesFromYamlWithCompilation(): void
     {
         $kernel = $this->createKernel('class2_with_compilation.yml');
 
         $object = $kernel->getContainer()->get('class2');
-        self::assertInstanceOf(Class2::class, $object);
+        $this->assertInstanceOf(Class2::class, $object);
     }
 
-    public function testSymfonyShouldResolveClassesFromDI()
+    public function testSymfonyShouldResolveClassesFromDI(): void
     {
         $kernel = $this->createKernel('empty.yml');
 
         $object = $kernel->getContainer()->get(ContainerAwareController::class);
-        self::assertInstanceOf(ContainerAwareController::class, $object);
+        $this->assertInstanceOf(ContainerAwareController::class, $object);
     }
 
-    public function testSymfonyShouldResolveClassesFromDIWithCache()
+    public function testSymfonyShouldResolveClassesFromDIWithCache(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -105,14 +105,14 @@ class KernelTests extends AbstractFunctionalTests
         $kernel = $this->createKernel('empty_with_cache.yml');
 
         $object = $kernel->getContainer()->get(ContainerAwareController::class);
-        self::assertInstanceOf(ContainerAwareController::class, $object);
+        $this->assertInstanceOf(ContainerAwareController::class, $object);
     }
 
-    public function testSymfonyShouldResolveClassesFromDIWithCompilation()
+    public function testSymfonyShouldResolveClassesFromDIWithCompilation(): void
     {
         $kernel = $this->createKernel('empty_with_compilation.yml');
 
         $object = $kernel->getContainer()->get(ContainerAwareController::class);
-        self::assertInstanceOf(ContainerAwareController::class, $object);
+        $this->assertInstanceOf(ContainerAwareController::class, $object);
     }
 }

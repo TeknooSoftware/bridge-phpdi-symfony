@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -36,6 +36,7 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use InvalidArgumentException;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionObject;
@@ -46,12 +47,15 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Exception\InvalidContainerException;
 use Traversable;
+use UnitEnum;
 
 use function class_exists;
+use function gettype;
 use function interface_exists;
 use function is_array;
 use function is_callable;
 use function is_object;
+use function is_scalar;
 use function is_string;
 use function iterator_to_array;
 use function krsort;
@@ -68,7 +72,7 @@ use function krsort;
  *
  * @copyright   Copyright (c) EIRL Richard Déloge (https://deloge.io - richard@deloge.io)
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 class BridgeBuilder implements BridgeBuilderInterface
@@ -204,6 +208,17 @@ class BridgeBuilder implements BridgeBuilderInterface
 
     private function setParameter(string $parameterName, mixed $value): void
     {
+        if (
+            !is_array($value)
+            && !is_scalar($value)
+            && !$value instanceof UnitEnum
+            && null !== $value
+        ) {
+            throw new InvalidArgumentException(
+                "PHP-DI Bridge : Parameter $parameterName is not a scalar or an array, but " . gettype($value)
+            );
+        }
+
         $this->sfBuilder->setParameter(
             $parameterName,
             $value
@@ -241,11 +256,11 @@ class BridgeBuilder implements BridgeBuilderInterface
         $callable = $definition->getCallable();
 
         $reflectionMethod = null;
-        if (!$callable instanceof Closure && is_object($callable) && is_callable($callable)) {
+        if (!$callable instanceof Closure && is_object($callable)) {
             //Invokable object
             $reflectionObject = new ReflectionObject($callable);
             $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (is_array($callable) && is_callable($callable)) {
+        } elseif (is_array($callable) && is_callable($callable) && is_object($callable[0]) && is_string($callable[1])) {
             //Callable is a public method from object
             $reflectionObject = new ReflectionObject($callable[0]);
             $reflectionMethod = $reflectionObject->getMethod($callable[1]);
@@ -263,7 +278,7 @@ class BridgeBuilder implements BridgeBuilderInterface
             );
         }
 
-        return (string) $returnType->getName();
+        return $returnType->getName();
     }
 
     /**

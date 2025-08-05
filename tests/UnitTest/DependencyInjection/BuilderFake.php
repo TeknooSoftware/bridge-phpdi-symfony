@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Created by PhpStorm.
  * Author : Richard Déloge, richarddeloge@gmail.com, https://teknoo.software
  * Date: 13/06/2024
  * Time: 16:52
  */
-
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
 use DI\ContainerBuilder as DIContainerBuilder;

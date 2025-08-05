@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Created by PhpStorm.
  * Author : Richard Déloge, richarddeloge@gmail.com, https://teknoo.software
  * Date: 13/06/2024
  * Time: 16:52
  */
-
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection\Support;
 
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilderInterface;
@@ -19,7 +21,7 @@ class ExtensionMock implements ExtensionInterface
 
     public static function create(): ExtensionInterface
     {
-        if (!self::$instance) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 
@@ -28,7 +30,7 @@ class ExtensionMock implements ExtensionInterface
 
     public function configure(BridgeBuilderInterface $builder): ExtensionInterface
     {
-        $this->counter++;
+        ++$this->counter;
 
         return $this;
     }

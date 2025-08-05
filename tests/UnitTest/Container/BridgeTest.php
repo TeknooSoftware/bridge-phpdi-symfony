@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -84,7 +84,7 @@ class BridgeTest extends TestCase
         );
     }
 
-    public function testInvokeWhenTheServiceIdIsInvalid()
+    public function testInvokeWhenTheServiceIdIsInvalid(): void
     {
         $this->expectException(\TypeError::class);
 
@@ -92,12 +92,11 @@ class BridgeTest extends TestCase
         $bridge(new \stdClass());
     }
 
-    public function testInvokeWhenTheServiceIdWasNotFound()
+    public function testInvokeWhenTheServiceIdWasNotFound(): void
     {
         $this->expectException(ServiceNotFoundException::class);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($this->createMock(DIContainer::class));
 
@@ -105,7 +104,7 @@ class BridgeTest extends TestCase
         $bridge('foo');
     }
 
-    public function testInvokeWhenTheServiceIdWasFound()
+    public function testInvokeWhenTheServiceIdWasFound(): void
     {
         $container = $this->createMock(DIContainer::class);
 
@@ -120,15 +119,14 @@ class BridgeTest extends TestCase
             ->willReturn(new \stdClass());
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $bridge = $this->buildInstance();
-        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 
-    public function testInvokeWhenTheServiceIdWasFoundWithCompilationPath()
+    public function testInvokeWhenTheServiceIdWasFoundWithCompilationPath(): void
     {
         $container = $this->createMock(DIContainer::class);
 
@@ -143,15 +141,14 @@ class BridgeTest extends TestCase
             ->willReturn(new \stdClass());
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $bridge = $this->buildInstance('/foo/bar', false);
-        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 
-    public function testInvokeWhenTheServiceIdWasFoundWithCache()
+    public function testInvokeWhenTheServiceIdWasFoundWithCache(): void
     {
         $container = $this->createMock(DIContainer::class);
 
@@ -166,15 +163,14 @@ class BridgeTest extends TestCase
             ->willReturn(new \stdClass());
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $bridge = $this->buildInstance(null, true);
-        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 
-    public function testInvokeWhenTheServiceIdWasFoundAndIsContainerAware()
+    public function testInvokeWhenTheServiceIdWasFoundAndIsContainerAware(): void
     {
         if (!interface_exists(ContainerAwareInterface::class)) {
             self::markTestSkipped('Test only for Symfony prior to 7');
@@ -200,15 +196,14 @@ class BridgeTest extends TestCase
             ->willReturn($instance);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $bridge = $this->buildInstance();
-        self::assertInstanceOf(ContainerAwareInterface::class, $bridge('foo'));
+        $this->assertInstanceOf(ContainerAwareInterface::class, $bridge('foo'));
     }
 
-    public function testInvokeWhenTheServiceIdWasFoundAndMustBeFetchedFromContainerEachTime()
+    public function testInvokeWhenTheServiceIdWasFoundAndMustBeFetchedFromContainerEachTime(): void
     {
         $container = $this->createMock(DIContainer::class);
 
@@ -223,34 +218,30 @@ class BridgeTest extends TestCase
             ->willReturn(new \stdClass());
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $bridge = $this->buildInstance();
-        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
-        self::assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 
-    public function testGetWithAnEntryExistNowhere()
+    public function testGetWithAnEntryExistNowhere(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -258,20 +249,17 @@ class BridgeTest extends TestCase
         $this->buildInstance()->get('foo');
     }
 
-    public function testGetWithAnEntryExistAsServiceInSymfony()
+    public function testGetWithAnEntryExistAsServiceInSymfony(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(true);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('get')
             ->willReturn(new \stdClass());
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
@@ -280,7 +268,7 @@ class BridgeTest extends TestCase
             ->method('getParameter');
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
@@ -288,17 +276,15 @@ class BridgeTest extends TestCase
             ->method('get');
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertInstanceOf(\stdClass::class, $this->buildInstance()->get('foo'));
+        $this->assertInstanceOf(\stdClass::class, $this->buildInstance()->get('foo'));
     }
 
-    public function testGetWithAnEntryExistInPHPDI()
+    public function testGetWithAnEntryExistInPHPDI(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
@@ -307,7 +293,6 @@ class BridgeTest extends TestCase
             ->method('get');
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
@@ -316,7 +301,7 @@ class BridgeTest extends TestCase
             ->method('getParameter');
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(true);
 
@@ -325,17 +310,15 @@ class BridgeTest extends TestCase
             ->willReturn(new \stdClass());
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertInstanceOf(\stdClass::class, $this->buildInstance()->get('foo'));
+        $this->assertInstanceOf(\stdClass::class, $this->buildInstance()->get('foo'));
     }
 
-    public function testGetWithAnEntryExistAsParameterInSymfony()
+    public function testGetWithAnEntryExistAsParameterInSymfony(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
@@ -344,7 +327,6 @@ class BridgeTest extends TestCase
             ->method('get');
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(true);
 
@@ -354,7 +336,7 @@ class BridgeTest extends TestCase
             ->willReturn('bar');
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
@@ -362,110 +344,97 @@ class BridgeTest extends TestCase
             ->method('get');
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertEquals('bar', $this->buildInstance()->get('foo'));
+        $this->assertEquals('bar', $this->buildInstance()->get('foo'));
     }
 
-    public function testHasWithAnEntryExistNowhere()
+    public function testHasWithAnEntryExistNowhere(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertFalse($this->buildInstance()->has('foo'));
+        $this->assertFalse($this->buildInstance()->has('foo'));
     }
 
-    public function testHasWithAnEntryExistAsServiceInSymfony()
+    public function testHasWithAnEntryExistAsServiceInSymfony(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(true);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertTrue($this->buildInstance()->has('foo'));
+        $this->assertTrue($this->buildInstance()->has('foo'));
     }
 
-    public function testHasWithAnEntryExistInPHPDI()
+    public function testHasWithAnEntryExistInPHPDI(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(false);
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(true);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertTrue($this->buildInstance()->has('foo'));
+        $this->assertTrue($this->buildInstance()->has('foo'));
     }
 
-    public function testHasWithAnEntryExistAsParameterInSymfony()
+    public function testHasWithAnEntryExistAsParameterInSymfony(): void
     {
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('has')
             ->willReturn(false);
 
         $this->getSfContainerMock()
-            ->expects($this->any())
             ->method('hasParameter')
             ->willReturn(true);
 
         $container = $this->createMock(DIContainer::class);
-        $container->expects($this->any())
+        $container
             ->method('has')
             ->willReturn(false);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
-        self::assertTrue($this->buildInstance()->has('foo'));
+        $this->assertTrue($this->buildInstance()->has('foo'));
     }
 }
