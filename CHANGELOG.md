@@ -1,5 +1,13 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [7.0.0] - 2025-08-04
+### Stable Release
+- Drop support of PHP 8.3
+- Requires PHP 8.4
+- Update to PHPStan 2
+- Fix some QA issues
+- Switch license from MIT to 3-Clause BSD
+- 
 ## [6.1.1] - 2025-02-07
 ### Stable Release
 - Update dev lib requirements

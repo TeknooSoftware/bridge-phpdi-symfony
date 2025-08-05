@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -39,10 +39,7 @@ class DIBridgeExtensionTest extends TestCase
 {
     private ?ContainerBuilder $container = null;
 
-    /**
-     * @return ContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private function getContainerBuilderMock()
+    private function getContainerBuilderMock(): \Symfony\Component\DependencyInjection\ContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
     {
         if (!$this->container instanceof ContainerBuilder) {
             $this->container = $this->createMock(ContainerBuilder::class);
@@ -56,49 +53,40 @@ class DIBridgeExtensionTest extends TestCase
         return new DIBridgeExtension(BuilderFake::class);
     }
 
-    public function testLoadWithoutDefinitionsAndImport()
+    public function testLoadWithoutDefinitionsAndImport(): void
     {
-        self::assertInstanceOf(
-            DIBridgeExtension::class,
-            $this->buildInstance()->load([], $this->getContainerBuilderMock())
-        );
+        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load([], $this->getContainerBuilderMock()));
     }
 
-    public function testLoadWithDefinitionsAndImportWithDefaultValues()
+    public function testLoadWithDefinitionsAndImportWithDefaultValues(): void
     {
-        self::assertInstanceOf(
-            DIBridgeExtension::class,
-            $this->buildInstance()->load(
+        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+            [
                 [
-                    [
-                        'definitions' => ['foo', 'bar'],
-                        'import' => ['hello' => 'world'],
-                    ]
-                ],
-                $this->getContainerBuilderMock()
-            )
-        );
+                    'definitions' => ['foo', 'bar'],
+                    'import' => ['hello' => 'world'],
+                ]
+            ],
+            $this->getContainerBuilderMock()
+        ));
     }
 
-    public function testLoadWithDefinitionsAndImport()
+    public function testLoadWithDefinitionsAndImport(): void
     {
-        self::assertInstanceOf(
-            DIBridgeExtension::class,
-            $this->buildInstance()->load(
+        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+            [
                 [
-                    [
-                        'compilation_path' => '/foo/bar',
-                        'enable_cache' => true,
-                        'definitions' => ['foo', 'bar'],
-                        'import' => ['hello' => 'world'],
-                    ]
-                ],
-                $this->getContainerBuilderMock()
-            )
-        );
+                    'compilation_path' => '/foo/bar',
+                    'enable_cache' => true,
+                    'definitions' => ['foo', 'bar'],
+                    'import' => ['hello' => 'world'],
+                ]
+            ],
+            $this->getContainerBuilderMock()
+        ));
     }
 
-    public function testLoadWithExtensions()
+    public function testLoadWithExtensions(): void
     {
         $mock = $this->getContainerBuilderMock();
         $mock->expects($this->exactly(2))
@@ -116,32 +104,29 @@ class DIBridgeExtensionTest extends TestCase
             ->with('ext-foo')
             ->willReturn($ext);
 
-        self::assertInstanceOf(
-            DIBridgeExtension::class,
-            $this->buildInstance()->load(
+        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+            [
                 [
-                    [
-                        'compilation_path' => '/foo/bar',
-                        'enable_cache' => true,
-                        'definitions' => ['foo', 'bar'],
-                        'import' => ['hello' => 'world'],
-                        'extensions' => [
-                            'ext-foo',
-                            [
-                                'priority' => 1,
-                                'name' => ExtensionMock::class
-                            ]
+                    'compilation_path' => '/foo/bar',
+                    'enable_cache' => true,
+                    'definitions' => ['foo', 'bar'],
+                    'import' => ['hello' => 'world'],
+                    'extensions' => [
+                        'ext-foo',
+                        [
+                            'priority' => 1,
+                            'name' => ExtensionMock::class
                         ]
                     ]
-                ],
-                $mock
-            )
-        );
+                ]
+            ],
+            $mock
+        ));
 
-        self::assertEquals(2, $ext->counter);
+        $this->assertEquals(2, $ext->counter);
     }
 
-    public function testExceptionOnLoadWithExtensionsWithInvalidService()
+    public function testExceptionOnLoadWithExtensionsWithInvalidService(): void
     {
         $mock = $this->getContainerBuilderMock();
         $mock->expects($this->exactly(1))
@@ -172,7 +157,7 @@ class DIBridgeExtensionTest extends TestCase
         );
     }
 
-    public function testExceptionOnLoadWithExtensionsWithInvalidClass()
+    public function testExceptionOnLoadWithExtensionsWithInvalidClass(): void
     {
         $mock = $this->getContainerBuilderMock();
         $mock->expects($this->exactly(1))
@@ -199,13 +184,13 @@ class DIBridgeExtensionTest extends TestCase
         );
     }
 
-    public function testLoadErrorContainer()
+    public function testLoadErrorContainer(): void
     {
         $this->expectException(TypeError::class);
         $this->buildInstance()->load([], new stdClass());
     }
 
-    public function testLoadErrorConfig()
+    public function testLoadErrorConfig(): void
     {
         $this->expectException(TypeError::class);
         $this->buildInstance()->load(new stdClass(), $this->getContainerBuilderMock());

@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -88,84 +88,71 @@ class BridgeBuilderTest extends TestCase
         );
     }
 
-    public function testLoadDefinitionWithBadArgument()
+    public function testLoadDefinitionWithBadArgument(): void
     {
         $this->expectException(\TypeError::class);
 
         $this->buildInstance()->loadDefinition(new \stdClass());
     }
 
-    public function testLoadDefinition()
+    public function testLoadDefinition(): void
     {
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()->loadDefinition([
-                ['priority' => 0, 'file' => 'foo'],
-                ['priority' => 0, 'file' => 'bar']
-            ])
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->loadDefinition([
+            ['priority' => 0, 'file' => 'foo'],
+            ['priority' => 0, 'file' => 'bar']
+        ]));
     }
 
-    public function testprepareCompilationWithBadArgument()
+    public function testprepareCompilationWithBadArgument(): void
     {
         $this->expectException(\TypeError::class);
 
         $this->buildInstance()->prepareCompilation(new \stdClass());
     }
 
-    public function testprepareCompilation()
+    public function testprepareCompilation(): void
     {
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()->prepareCompilation('foo')
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->prepareCompilation('foo'));
     }
 
-    public function testenableCacheWithBadArgument()
+    public function testenableCacheWithBadArgument(): void
     {
         $this->expectException(\TypeError::class);
 
         $this->buildInstance()->enableCache(new \stdClass());
     }
 
-    public function testenableCache()
+    public function testenableCache(): void
     {
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()->enableCache(true)
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->enableCache(true));
     }
 
-    public function testImportWithBadArgument()
+    public function testImportWithBadArgument(): void
     {
         $this->expectException(\TypeError::class);
 
         $this->buildInstance()->import(new \stdClass(), new \stdClass());
     }
 
-    public function testImport()
+    public function testImport(): void
     {
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()->import('foo', 'bar')
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->import('foo', 'bar'));
     }
 
-    public function testInitializeSymfonyContainerWithDefaultDIContainer()
+    public function testInitializeSymfonyContainerWithDefaultDIContainer(): void
     {
         $this->expectException(\RuntimeException::class);
 
         $container = $this->createMock(DIContainer::class);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
         $this->buildInstance()->initializeSymfonyContainer();
     }
 
-    public function testInitializeSymfonyContainerWithNotFoundEntry()
+    public function testInitializeSymfonyContainerWithNotFoundEntry(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -173,18 +160,17 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects($this->any())
+        $container
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotFound',
             ]);
 
-        $container->expects($this->any())
+        $container
             ->method('extractDefinition')
             ->willReturn(null);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -194,16 +180,13 @@ class BridgeBuilderTest extends TestCase
 
         $this->expectException(ServiceNotFoundException::class);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithNotSupportedCallableFactory()
+    public function testInitializeSymfonyContainerWithNotSupportedCallableFactory(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -211,13 +194,13 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects($this->any())
+        $container
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotSupportedFactory',
             ]);
 
-        $container->expects($this->any())
+        $container
             ->method('extractDefinition')
             ->willReturn(
                 (new FactoryDefinition(
@@ -227,7 +210,6 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -237,16 +219,13 @@ class BridgeBuilderTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithNotSupportedReflectionType()
+    public function testInitializeSymfonyContainerWithNotSupportedReflectionType(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -254,13 +233,13 @@ class BridgeBuilderTest extends TestCase
         ];
 
         $container = $this->createMock(Container::class);
-        $container->expects($this->any())
+        $container
             ->method('getKnownEntryNames')
             ->willReturn([
                 'entryNotSupportedFactory',
             ]);
 
-        $container->expects($this->any())
+        $container
             ->method('extractDefinition')
             ->willReturn(
                 (new FactoryDefinition(
@@ -270,7 +249,6 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -280,22 +258,19 @@ class BridgeBuilderTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->initializeSymfonyContainer());
     }
 
     private function prepareForInitializeSymfonyContainerTests(
         array $definitionsFiles,
         ?string $compilationPath,
         bool $enableCache
-    ) {
+    ): void {
         $container = $this->createMock(Container::class);
-        $container->expects($this->any())
+        $container
             ->method('getKnownEntryNames')
             ->willReturn([
                 \DateTimeInterface::class,
@@ -378,7 +353,6 @@ class BridgeBuilderTest extends TestCase
             ]);
 
         $this->getDiBuilderMock()
-            ->expects($this->any())
             ->method('build')
             ->willReturn($container);
 
@@ -392,7 +366,7 @@ class BridgeBuilderTest extends TestCase
             ->expects($this->exactly(6))
             ->method('setParameter')
             ->willReturnCallback(
-                fn () => match (func_get_args()) {
+                fn (): true => match (func_get_args()) {
                     [
                         'entryAboutEnvironment',
                         '%env(ENV_NAME)%',
@@ -449,31 +423,31 @@ class BridgeBuilderTest extends TestCase
                             $enableCache
                         ]
                     ),
-                    \DateTimeInterface::class => (new SfDefinition(\DateTimeInterface::class))
+                    \DateTimeInterface::class => new SfDefinition(\DateTimeInterface::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments([\DateTimeInterface::class])
                         ->setPublic(true),
-                    \DateTime::class => (new SfDefinition(\DateTime::class))
+                    \DateTime::class => new SfDefinition(\DateTime::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments([\DateTime::class])
                         ->setPublic(true),
-                    'aliasInPHPDI' => (new SfDefinition(\DateTime::class))
+                    'aliasInPHPDI' => new SfDefinition(\DateTime::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments(['aliasInPHPDI'])
                         ->setPublic(true),
-                    'entryAboutObject' => (new SfDefinition(\stdClass::class))
+                    'entryAboutObject' => new SfDefinition(\stdClass::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments(['entryAboutObject'])
                         ->setPublic(true),
-                    'entryAboutFactoryClosure' => (new SfDefinition(\stdClass::class))
+                    'entryAboutFactoryClosure' => new SfDefinition(\stdClass::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments(['entryAboutFactoryClosure'])
                         ->setPublic(true),
-                    'entryAboutFactoryInvokable' => (new SfDefinition(\stdClass::class))
+                    'entryAboutFactoryInvokable' => new SfDefinition(\stdClass::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments(['entryAboutFactoryInvokable'])
                         ->setPublic(true),
-                    'entryAboutFactoryMethod' => (new SfDefinition(\stdClass::class))
+                    'entryAboutFactoryMethod' => new SfDefinition(\stdClass::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments(['entryAboutFactoryMethod'])
                         ->setPublic(true),
@@ -481,7 +455,45 @@ class BridgeBuilderTest extends TestCase
             );
     }
 
-    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation()
+    public function testInitializeSymfonyContainerWithInvalidParameter(): void
+    {
+        $container = $this->createMock(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryAboutObject',
+            ]);
+
+        $container->expects($this->exactly(1))
+            ->method('extractDefinition')
+            ->willReturnMap([
+                [
+                    'entryAboutObject',
+                    (new ValueDefinition(new \stdClass()))
+                ],
+            ]);
+
+        $this->getDiBuilderMock()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderMock()
+            ->expects($this->never())
+            ->method('setAlias');
+
+        $this->getSfContainerBuilderMock()
+            ->expects($this->never())
+            ->method('setParameter');
+
+        $this->getSfContainerBuilderMock()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -490,16 +502,13 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], null, false);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithCacheAndNoCompilation()
+    public function testInitializeSymfonyContainerWithCacheAndNoCompilation(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -508,17 +517,14 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], null, true);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->enableCache(true)
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->enableCache(true)
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithNoCacheAndCompilation()
+    public function testInitializeSymfonyContainerWithNoCacheAndCompilation(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -527,17 +533,14 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['foo', 'bar'], '/foo/bar', false);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->prepareCompilation('/foo/bar')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->prepareCompilation('/foo/bar')
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilationAndOrderedFiles()
+    public function testInitializeSymfonyContainerWithNoCacheAndNoCompilationAndOrderedFiles(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -546,16 +549,13 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], null, false);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithCacheAndNoCompilationAndOrderedFiles()
+    public function testInitializeSymfonyContainerWithCacheAndNoCompilationAndOrderedFiles(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -564,17 +564,14 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], null, true);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->enableCache(true)
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->enableCache(true)
+            ->initializeSymfonyContainer());
     }
 
-    public function testInitializeSymfonyContainerWithNoCacheAndCompilationAndOrderedFiles()
+    public function testInitializeSymfonyContainerWithNoCacheAndCompilationAndOrderedFiles(): void
     {
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
@@ -583,13 +580,10 @@ class BridgeBuilderTest extends TestCase
 
         $this->prepareForInitializeSymfonyContainerTests(['bar', 'foo'], '/foo/bar', false);
 
-        self::assertInstanceOf(
-            BridgeBuilder::class,
-            $this->buildInstance()
-                ->loadDefinition($definitionsFiles)
-                ->import('hello', 'world')
-                ->prepareCompilation('/foo/bar')
-                ->initializeSymfonyContainer()
-        );
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition($definitionsFiles)
+            ->import('hello', 'world')
+            ->prepareCompilation('/foo/bar')
+            ->initializeSymfonyContainer());
     }
 }

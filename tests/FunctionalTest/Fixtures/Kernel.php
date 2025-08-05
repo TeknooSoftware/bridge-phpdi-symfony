@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -18,7 +18,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -26,9 +26,13 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 
+use Override;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\HttpKernel\Kernel as SymfonyKernel;
 use Teknoo\DI\SymfonyBridge\DIBridgeBundle;
+
+use function random_int;
+use function strlen;
 
 class Kernel extends SymfonyKernel
 {
@@ -46,11 +50,13 @@ class Kernel extends SymfonyKernel
         return [new DIBridgeBundle()];
     }
 
+    #[Override]
     public function getProjectDir(): string
     {
         return __DIR__;
     }
 
+    #[Override]
     protected function getContainerClass(): string
     {
         return $this->randomName();
@@ -59,14 +65,14 @@ class Kernel extends SymfonyKernel
     private function randomName(): string {
         $characters = 'abcdefghijklmnopqrstuvwxyz';
         $str = '';
-        for ($i = 0; $i < 10; $i++) {
-            $str .= $characters[\rand(0, \strlen($characters) - 1)];
+        for ($i = 0; $i < 10; ++$i) {
+            $str .= $characters[random_int(0, strlen($characters) - 1)];
         }
 
         return $str;
     }
 
-    public function registerContainerConfiguration(LoaderInterface $loader)
+    public function registerContainerConfiguration(LoaderInterface $loader): void
     {
         $loader->load(__DIR__ . '/config/' . $this->configFile);
     }

@@ -4,7 +4,7 @@
     "description": "Userfriendly integration of PHP-DI with Symfony, Fork from php-di/symfony-bridge",
     "keywords": ["symfony", "phpdi", "di", "bridge"],
     "homepage": "https://teknoo.software/libraries/php-di-symfony-bridge",
-    "license": "MIT",
+    "license": ["BSD-3-Clause"],
     "authors": [
         {
             "name": "Richard Déloge",
@@ -40,21 +40,21 @@
         }
     },
     "require": {
-        "php": "^8.2",
-        "php-di/php-di": "^7.0.8",
-        "symfony/dependency-injection": "^6.4||^7.2",
-        "symfony/http-kernel": "^6.4||^7.2",
-        "symfony/config": "^6.4||^7.2"
+        "php": "^8.4",
+        "php-di/php-di": "^7.0.11",
+        "symfony/dependency-injection": "^6.4.24||^7.3",
+        "symfony/http-kernel": "^6.4.24||^7.3",
+        "symfony/config": "^6.4.24||^7.3"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^12",
-        "squizlabs/php_codesniffer": "^3.11.3",
-        "phpstan/phpstan": "^1.12.16",
-        "symfony/property-access": "^6.4||^7.2",
-        "symfony/filesystem": "^6.4||^7.2",
-        "symfony/yaml": "^6.4||^7.2",
-        "symfony/error-handler": "^6.4||^7.2"
+        "phpunit/phpunit": "^12.3",
+        "squizlabs/php_codesniffer": "^3.13.2",
+        "phpstan/phpstan": "^2.1.22",
+        "symfony/property-access": "^6.4.24||^7.3",
+        "symfony/filesystem": "^6.4.24||^7.3",
+        "symfony/yaml": "^6.4.24||^7.3",
+        "symfony/error-handler": "^6.4.24||^7.3"
     },
     "autoload": {
         "psr-4": {

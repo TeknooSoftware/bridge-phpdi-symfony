@@ -1,7 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1;
-use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
 
 use function DI\get;

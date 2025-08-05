@@ -1,8 +1,14 @@
 parameters:
     ignoreErrors:
         -
-            message: '#Call to an undefined method [a-zA-Z0-9\\_]+::children\(\)#'
+            message: '#Cannot call method .* on mixed#'
             path: src/DependencyInjection/Configuration.php
         -
-            message: '#Container::setParameter#'
-            path: src/Container/BridgeBuilder.php
+            message: '#Call to an undefined method.*::booleanNode\(\)#'
+            path: src/DependencyInjection/Configuration.php
+        -
+            message: '#Cannot cast mixed to int#'
+            path: src/DependencyInjection/DIBridgeExtension.php
+        -
+            message: '#Parameter \#1 \$diBuilder#'
+            path: src/DependencyInjection/DIBridgeExtension.php

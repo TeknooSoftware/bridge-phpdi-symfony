@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -56,34 +56,32 @@ class CompiledContainerTest extends TestCase
         );
     }
 
-    public function testExtractDefinitionWithBadArgument()
+    public function testExtractDefinitionWithBadArgument(): void
     {
         $this->expectException(\TypeError::class);
         $this->buildInstance()->extractDefinition(new \stdClass());
     }
 
-    public function testExtractDefinitionWhenDefinitionsInjected()
+    public function testExtractDefinitionWhenDefinitionsInjected(): void
     {
-        self::assertNull((new CompiledContainer())->extractDefinition('foo'));
+        $this->assertNotInstanceOf(\DI\Definition\Definition::class, new CompiledContainer()->extractDefinition('foo'));
     }
 
-    public function testExtractDefinitionWhenNoThereAreNotFound()
+    public function testExtractDefinitionWhenNoThereAreNotFound(): void
     {
         $this->getMutableDefinitionSourceMock()
-            ->expects($this->any())
             ->method('getDefinition')
             ->willThrowException(new InvalidDefinition());
 
-        self::assertNull($this->buildInstance()->extractDefinition('foo'));
+        $this->assertNotInstanceOf(\DI\Definition\Definition::class, $this->buildInstance()->extractDefinition('foo'));
     }
 
-    public function testExtractDefinition()
+    public function testExtractDefinition(): void
     {
         $this->getMutableDefinitionSourceMock()
-            ->expects($this->any())
             ->method('getDefinition')
             ->willReturn($this->createMock(Definition::class));
 
-        self::assertInstanceOf(Definition::class, $this->buildInstance()->extractDefinition('foo'));
+        $this->assertInstanceOf(Definition::class, $this->buildInstance()->extractDefinition('foo'));
     }
 }

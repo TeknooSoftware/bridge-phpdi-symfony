@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -17,7 +17,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -36,6 +36,8 @@ use Teknoo\DI\SymfonyBridge\Extension\InvalidExtensionException;
 
 use function class_exists;
 use function is_a;
+use function is_array;
+use function is_numeric;
 
 /**
  * Symfony Bundle extension to parse configuration defined in `Configuration` and initialize the Bridge Builder with
@@ -44,7 +46,7 @@ use function is_a;
  *
  * @copyright   Copyright (c) EIRL Richard Déloge (https://deloge.io - richard@deloge.io)
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 class DIBridgeExtension extends Extension
@@ -58,11 +60,11 @@ class DIBridgeExtension extends Extension
     }
 
     /**
-     * @param array<string, string> $configuration
+     * @param array<string, mixed> $configuration
      */
     private function configurePHPDI(array &$configuration, BridgeBuilderInterface $builder): void
     {
-        if (!empty($configuration['compilation_path'])) {
+        if (!empty($configuration['compilation_path']) && is_string($configuration['compilation_path'])) {
             $builder->prepareCompilation(
                 $configuration['compilation_path']
             );
@@ -76,48 +78,56 @@ class DIBridgeExtension extends Extension
     }
 
     /**
-     * @param array<string, array<array{priority?:int, file:string}>> $configuration
+     * @param array<string, mixed> $configuration
      */
     private function processDefinitions(array &$configuration, BridgeBuilderInterface $builder): void
     {
-        if (empty($configuration['definitions'])) {
+        if (empty($configuration['definitions']) || !is_array($configuration['definitions'])) {
             return;
         }
 
-        $builder->loadDefinition(
-            $configuration['definitions']
-        );
+        /** @var array<int, array{priority?: int, file: string}> $definitions */
+        $definitions = $configuration['definitions'];
+        $builder->loadDefinition($definitions);
     }
 
     /**
-     * @param array<string, array<string, string>> $configuration
+     * @param array<string, mixed> $configuration
      */
     private function processImport(array &$configuration, BridgeBuilderInterface $builder): void
     {
-        if (empty($configuration['import'])) {
+        if (empty($configuration['import']) || !is_array($configuration['import'])) {
             return;
         }
 
         foreach ($configuration['import'] as $diKey => $sfKey) {
-            $builder->import($diKey, $sfKey);
+            if (is_string($diKey) && is_string($sfKey)) {
+                $builder->import($diKey, $sfKey);
+            }
         }
     }
 
     /**
-     * @param array<string, array<array{priority?:int, name:string}>> $configuration
+     * @param array<string, mixed> $configuration
      */
     private function processExtensions(
         SymfonyContainerBuilder $container,
         array &$configuration,
         BridgeBuilderInterface $builder
     ): void {
-        if (empty($configuration['extensions'])) {
+        if (empty($configuration['extensions']) || !is_array($configuration['extensions'])) {
             return;
         }
 
         $toOrder = [];
         foreach ($configuration['extensions'] as $extensionConfiguration) {
-            $toOrder[(int) ($extensionConfiguration['priority'] ?? 0)][] = $extensionConfiguration['name'];
+            if (
+                is_array($extensionConfiguration)
+                && (!empty($extensionConfiguration['name']) && is_string($extensionConfiguration['name']))
+                && (!isset($extensionConfiguration['priority']) || is_numeric($extensionConfiguration['priority']))
+            ) {
+                $toOrder[(int) ($extensionConfiguration['priority'] ?? 0)][] = $extensionConfiguration['name'];
+            }
         }
 
         unset($extensionConfiguration);
@@ -139,7 +149,10 @@ class DIBridgeExtension extends Extension
                     continue;
                 }
 
-                if (class_exists($name, true) && is_a($name, BridgeExtensionInterface::class, true)) {
+                if (
+                    class_exists($name, true)
+                    && is_a($name, BridgeExtensionInterface::class, true)
+                ) {
                     $extension = $name::create();
 
                     $extension->configure($builder);
@@ -155,7 +168,7 @@ class DIBridgeExtension extends Extension
     }
 
     /**
-     * @param array<string, string|array<string|string>> $configuration
+     * @param array<string, mixed> $configuration
      */
     private function initializePHPDI(array &$configuration, SymfonyContainerBuilder $container): void
     {
@@ -182,6 +195,7 @@ class DIBridgeExtension extends Extension
     public function load(array $configs, SymfonyContainerBuilder $container): self
     {
         $configuration = new Configuration();
+        /** @var array<string, mixed> $configs */
         $configs = $this->processConfiguration($configuration, $configs);
 
         if (!empty($configs)) {

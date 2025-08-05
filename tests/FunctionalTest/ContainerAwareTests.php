@@ -5,7 +5,7 @@
  *
  * LICENSE
  *
- * This source file is subject to the MIT license
+ * This source file is subject to the 3-Clause BSD license
  * it is available in LICENSE file at the root of this package
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
@@ -18,7 +18,7 @@
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
- * @license     https://teknoo.software/license/mit         MIT License
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
@@ -36,7 +36,7 @@ class ContainerAwareTests extends AbstractFunctionalTests
     /**
      * @link https://github.com/PHP-DI/Symfony-Bridge/issues/2
      */
-    public function testContainerAwareWithoutCacheAndWithoutCompilation()
+    public function testContainerAwareWithoutCacheAndWithoutCompilation(): void
     {
         $kernel = $this->createKernel('empty.yml');
         $container = $kernel->getContainer();
@@ -44,13 +44,13 @@ class ContainerAwareTests extends AbstractFunctionalTests
         /** @var ContainerAwareController $class */
         $class = $container->get(ContainerAwareController::class);
 
-        self::assertSame($container, $class->container);
+        $this->assertSame($container, $class->container);
     }
 
     /**
      * @link https://github.com/PHP-DI/Symfony-Bridge/issues/2
      */
-    public function testContainerAwareWithCacheAndWithoutCompilation()
+    public function testContainerAwareWithCacheAndWithoutCompilation(): void
     {
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
@@ -62,13 +62,13 @@ class ContainerAwareTests extends AbstractFunctionalTests
         /** @var ContainerAwareController $class */
         $class = $container->get(ContainerAwareController::class);
 
-        self::assertSame($container, $class->container);
+        $this->assertSame($container, $class->container);
     }
 
     /**
      * @link https://github.com/PHP-DI/Symfony-Bridge/issues/2
      */
-    public function testContainerAwareWithoutCacheAndWithCompilation()
+    public function testContainerAwareWithoutCacheAndWithCompilation(): void
     {
         $kernel = $this->createKernel('empty_with_compilation.yml');
         $container = $kernel->getContainer();
@@ -76,6 +76,6 @@ class ContainerAwareTests extends AbstractFunctionalTests
         /** @var ContainerAwareController $class */
         $class = $container->get(ContainerAwareController::class);
 
-        self::assertSame($container, $class->container);
+        $this->assertSame($container, $class->container);
     }
 }
