@@ -1,5 +1,10 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [7.1.0] - 2025-08-18
+### Stable Release
+- Support of PHP DI 7.1 and native proxy.
+  - Use `DI\Proxy\ProxyFactoryInterface` instead `DI\Proxy\ProxyFactory`
+
 ## [7.0.0] - 2025-08-04
 ### Stable Release
 - Drop support of PHP 8.3

@@ -28,7 +28,7 @@ namespace Teknoo\DI\SymfonyBridge\Container;
 use DI\CompiledContainer as DIContainer;
 use DI\Definition\Definition;
 use DI\Definition\Source\MutableDefinitionSource;
-use DI\Proxy\ProxyFactory;
+use DI\Proxy\ProxyFactoryInterface;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
@@ -51,7 +51,7 @@ class CompiledContainer extends DIContainer implements ContainerInterface
      */
     public function __construct(
         array|MutableDefinitionSource $definitions = [],
-        ?ProxyFactory $proxyFactory = null,
+        ?ProxyFactoryInterface $proxyFactory = null,
         ?PsrContainerInterface $wrapperContainer = null,
     ) {
         parent::__construct(

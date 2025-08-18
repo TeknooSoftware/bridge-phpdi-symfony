@@ -41,7 +41,7 @@
     },
     "require": {
         "php": "^8.4",
-        "php-di/php-di": "^7.0.11",
+        "php-di/php-di": "^7.1.1",
         "symfony/dependency-injection": "^6.4.24||^7.3",
         "symfony/http-kernel": "^6.4.24||^7.3",
         "symfony/config": "^6.4.24||^7.3"
