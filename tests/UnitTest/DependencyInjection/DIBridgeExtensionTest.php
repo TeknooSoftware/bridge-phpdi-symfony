@@ -39,7 +39,7 @@ class DIBridgeExtensionTest extends TestCase
 {
     private ?ContainerBuilder $container = null;
 
-    private function getContainerBuilderMock(): \Symfony\Component\DependencyInjection\ContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
+    private function getContainerBuilderMock(): ContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
     {
         if (!$this->container instanceof ContainerBuilder) {
             $this->container = $this->createMock(ContainerBuilder::class);
@@ -55,12 +55,13 @@ class DIBridgeExtensionTest extends TestCase
 
     public function testLoadWithoutDefinitionsAndImport(): void
     {
-        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load([], $this->getContainerBuilderMock()));
+        $this->buildInstance()->load([], $this->getContainerBuilderMock());
+        $this->assertTrue(true);
     }
 
     public function testLoadWithDefinitionsAndImportWithDefaultValues(): void
     {
-        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+        $this->buildInstance()->load(
             [
                 [
                     'definitions' => ['foo', 'bar'],
@@ -68,12 +69,13 @@ class DIBridgeExtensionTest extends TestCase
                 ]
             ],
             $this->getContainerBuilderMock()
-        ));
+        );
+        $this->assertTrue(true);
     }
 
     public function testLoadWithDefinitionsAndImport(): void
     {
-        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+        $this->buildInstance()->load(
             [
                 [
                     'compilation_path' => '/foo/bar',
@@ -83,7 +85,8 @@ class DIBridgeExtensionTest extends TestCase
                 ]
             ],
             $this->getContainerBuilderMock()
-        ));
+        );
+        $this->assertTrue(true);
     }
 
     public function testLoadWithExtensions(): void
@@ -104,7 +107,7 @@ class DIBridgeExtensionTest extends TestCase
             ->with('ext-foo')
             ->willReturn($ext);
 
-        $this->assertInstanceOf(DIBridgeExtension::class, $this->buildInstance()->load(
+        $this->buildInstance()->load(
             [
                 [
                     'compilation_path' => '/foo/bar',
@@ -121,7 +124,7 @@ class DIBridgeExtensionTest extends TestCase
                 ]
             ],
             $mock
-        ));
+        );
 
         $this->assertEquals(2, $ext->counter);
     }
@@ -138,7 +141,7 @@ class DIBridgeExtensionTest extends TestCase
         $mock->expects($this->once())
             ->method('get')
             ->with('ext-foo')
-            ->willReturn(new \stdClass());
+            ->willReturn(new stdClass());
 
         $this->expectException(InvalidExtensionException::class);
         $this->buildInstance()->load(
@@ -176,7 +179,7 @@ class DIBridgeExtensionTest extends TestCase
                     'definitions' => ['foo', 'bar'],
                     'import' => ['hello' => 'world'],
                     'extensions' => [
-                        \stdClass::class,
+                        stdClass::class,
                     ]
                 ]
             ],

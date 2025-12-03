@@ -192,7 +192,7 @@ class DIBridgeExtension extends Extension
     /**
      * @param array<string, string|array<string|array<string>>> $configs
      */
-    public function load(array $configs, SymfonyContainerBuilder $container): self
+    public function load(array $configs, SymfonyContainerBuilder $container): void
     {
         $configuration = new Configuration();
         /** @var array<string, mixed> $configs */
@@ -201,7 +201,5 @@ class DIBridgeExtension extends Extension
         if (!empty($configs)) {
             $this->initializePHPDI($configs, $container);
         }
-
-        return $this;
     }
 }

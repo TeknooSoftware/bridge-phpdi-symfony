@@ -4,12 +4,6 @@ parameters:
         - src/
     ignoreErrors:
         -
-            message: '#Cannot call method .* on mixed#'
-            path: src/DependencyInjection/Configuration.php
-        -
-            message: '#Call to an undefined method.*::booleanNode\(\)#'
-            path: src/DependencyInjection/Configuration.php
-        -
             message: '#Cannot cast mixed to int#'
             path: src/DependencyInjection/DIBridgeExtension.php
         -
