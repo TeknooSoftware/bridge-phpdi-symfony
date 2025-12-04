@@ -3,6 +3,7 @@
 ## [7.1.1] - 2025-12-03
 ### Stable Release
 - Update dev libraries
+- Support Symfony 7.4 and 8
 
 ## [7.1.0] - 2025-08-18
 ### Stable Release
