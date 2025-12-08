@@ -36,11 +36,11 @@ use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
-use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
@@ -56,25 +56,19 @@ class BridgeBuilderTest extends TestCase
 
     private ?SfContainerBuilder $sfContainer = null;
 
-    /**
-     * @return DIContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private function getDiBuilderMock(): DIContainerBuilder
+    private function getDiBuilderStub(): DIContainerBuilder&Stub
     {
         if (!$this->diBuilder instanceof DIContainerBuilder) {
-            $this->diBuilder = $this->createMock(DIContainerBuilder::class);
+            $this->diBuilder = $this->createStub(DIContainerBuilder::class);
         }
 
         return $this->diBuilder;
     }
 
-    /**
-     * @return \PHPUnit\Framework\MockObject\MockObject|SfContainerBuilder
-     */
-    private function getSfContainerBuilderMock(): SfContainerBuilder
+    private function getSfContainerBuilderStub(): SfContainerBuilder&Stub
     {
         if (!$this->sfContainer instanceof SfContainerBuilder) {
-            $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+            $this->sfContainer = $this->createStub(SfContainerBuilder::class);
         }
 
         return $this->sfContainer;
@@ -83,8 +77,8 @@ class BridgeBuilderTest extends TestCase
     public function buildInstance(): BridgeBuilder
     {
         return new BridgeBuilder(
-            $this->getDiBuilderMock(),
-            $this->getSfContainerBuilderMock()
+            $this->getDiBuilderStub(),
+            $this->getSfContainerBuilderStub()
         );
     }
 
@@ -143,9 +137,9 @@ class BridgeBuilderTest extends TestCase
     {
         $this->expectException(\RuntimeException::class);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -154,12 +148,13 @@ class BridgeBuilderTest extends TestCase
 
     public function testInitializeSymfonyContainerWithNotFoundEntry(): void
     {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
             ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $container = $this->createMock(Container::class);
+        $container = $this->createStub(Container::class);
         $container
             ->method('getKnownEntryNames')
             ->willReturn([
@@ -170,11 +165,11 @@ class BridgeBuilderTest extends TestCase
             ->method('extractDefinition')
             ->willReturn(null);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('addDefinitions');
 
@@ -188,12 +183,13 @@ class BridgeBuilderTest extends TestCase
 
     public function testInitializeSymfonyContainerWithNotSupportedCallableFactory(): void
     {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
             ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $container = $this->createMock(Container::class);
+        $container = $this->createStub(Container::class);
         $container
             ->method('getKnownEntryNames')
             ->willReturn([
@@ -209,11 +205,11 @@ class BridgeBuilderTest extends TestCase
                 ))
             );
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('addDefinitions');
 
@@ -227,12 +223,13 @@ class BridgeBuilderTest extends TestCase
 
     public function testInitializeSymfonyContainerWithNotSupportedReflectionType(): void
     {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
         $definitionsFiles = [
             ['priority' => 0, 'file' => 'foo'],
             ['priority' => 0, 'file' => 'bar'],
         ];
 
-        $container = $this->createMock(Container::class);
+        $container = $this->createStub(Container::class);
         $container
             ->method('getKnownEntryNames')
             ->willReturn([
@@ -248,11 +245,11 @@ class BridgeBuilderTest extends TestCase
                 ))
             );
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('addDefinitions');
 
@@ -269,6 +266,7 @@ class BridgeBuilderTest extends TestCase
         ?string $compilationPath,
         bool $enableCache
     ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
         $container = $this->createMock(Container::class);
         $container
             ->method('getKnownEntryNames')
@@ -352,17 +350,17 @@ class BridgeBuilderTest extends TestCase
                 ],
             ]);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->once())
             ->method('setAlias')
             ->with('aliasInSymfony', 'symfonyService')
-            ->willReturn($this->createMock(Alias::class));
+            ->willReturn($this->createStub(Alias::class));
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->exactly(6))
             ->method('setParameter')
             ->willReturnCallback(
@@ -406,7 +404,7 @@ class BridgeBuilderTest extends TestCase
                 }
             );
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->once())
             ->method('addDefinitions')
             ->with(
@@ -457,6 +455,7 @@ class BridgeBuilderTest extends TestCase
 
     public function testInitializeSymfonyContainerWithInvalidParameter(): void
     {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
         $container = $this->createMock(Container::class);
         $container
             ->method('getKnownEntryNames')
@@ -473,19 +472,19 @@ class BridgeBuilderTest extends TestCase
                 ],
             ]);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('setAlias');
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('setParameter');
 
-        $this->getSfContainerBuilderMock()
+        $this->getSfContainerBuilderStub()
             ->expects($this->never())
             ->method('addDefinitions');
 

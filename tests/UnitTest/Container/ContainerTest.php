@@ -29,6 +29,7 @@ use DI\Definition\Definition;
 use DI\Definition\Exception\InvalidDefinition;
 use DI\Definition\Source\MutableDefinitionSource;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Teknoo\DI\SymfonyBridge\Container\Container;
 
@@ -37,13 +38,10 @@ class ContainerTest extends TestCase
 {
     private ?MutableDefinitionSource $originalDefinitions = null;
 
-    /**
-     * @return MutableDefinitionSource|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private function getMutableDefinitionSourceMock(): MutableDefinitionSource
+    private function getMutableDefinitionSourceStub(): MutableDefinitionSource&Stub
     {
         if (!$this->originalDefinitions instanceof MutableDefinitionSource) {
-            $this->originalDefinitions = $this->createMock(MutableDefinitionSource::class);
+            $this->originalDefinitions = $this->createStub(MutableDefinitionSource::class);
         }
 
         return $this->originalDefinitions;
@@ -52,7 +50,7 @@ class ContainerTest extends TestCase
     public function buildInstance(): Container
     {
         return new Container(
-            $this->getMutableDefinitionSourceMock()
+            $this->getMutableDefinitionSourceStub()
         );
     }
 
@@ -69,7 +67,7 @@ class ContainerTest extends TestCase
 
     public function testExtractDefinitionWhenNoThereAreNotFound(): void
     {
-        $this->getMutableDefinitionSourceMock()
+        $this->getMutableDefinitionSourceStub()
             ->method('getDefinition')
             ->willThrowException(new InvalidDefinition());
 
@@ -78,9 +76,9 @@ class ContainerTest extends TestCase
 
     public function testExtractDefinition(): void
     {
-        $this->getMutableDefinitionSourceMock()
+        $this->getMutableDefinitionSourceStub()
             ->method('getDefinition')
-            ->willReturn($this->createMock(Definition::class));
+            ->willReturn($this->createStub(Definition::class));
 
         $this->assertInstanceOf(Definition::class, $this->buildInstance()->extractDefinition('foo'));
     }

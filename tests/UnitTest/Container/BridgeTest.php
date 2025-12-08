@@ -28,6 +28,7 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Container as SfContainer;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
@@ -43,25 +44,19 @@ class BridgeTest extends TestCase
 
     private ?SfContainer $sfContainer = null;
 
-    /**
-     * @return DIContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private function getDiBuilderMock(): DIContainerBuilder
+    private function getDiBuilderStub(): DIContainerBuilder&Stub
     {
         if (!$this->diBuilder instanceof DIContainerBuilder) {
-            $this->diBuilder = $this->createMock(DIContainerBuilder::class);
+            $this->diBuilder = $this->createStub(DIContainerBuilder::class);
         }
 
         return $this->diBuilder;
     }
 
-    /**
-     * @return \PHPUnit\Framework\MockObject\MockObject|SfContainer
-     */
-    private function getSfContainerMock(): SfContainer
+    private function getSfContainerStub(): SfContainer&Stub
     {
         if (!$this->sfContainer instanceof SfContainer) {
-            $this->sfContainer = $this->createMock(SfContainer::class);
+            $this->sfContainer = $this->createStub(SfContainer::class);
         }
 
         return $this->sfContainer;
@@ -70,8 +65,8 @@ class BridgeTest extends TestCase
     public function buildInstance(?string $compilationPath = null, bool $enableCache = false): Bridge
     {
         return new Bridge(
-            $this->getDiBuilderMock(),
-            $this->getSfContainerMock(),
+            $this->getDiBuilderStub(),
+            $this->getSfContainerStub(),
             [
                 'foo',
                 'bar'
@@ -96,9 +91,9 @@ class BridgeTest extends TestCase
     {
         $this->expectException(ServiceNotFoundException::class);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
-            ->willReturn($this->createMock(DIContainer::class));
+            ->willReturn($this->createStub(DIContainer::class));
 
         $bridge = $this->buildInstance();
         $bridge('foo');
@@ -118,7 +113,7 @@ class BridgeTest extends TestCase
             ->with('foo')
             ->willReturn(new \stdClass());
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -140,7 +135,7 @@ class BridgeTest extends TestCase
             ->with('foo')
             ->willReturn(new \stdClass());
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -162,7 +157,7 @@ class BridgeTest extends TestCase
             ->with('foo')
             ->willReturn(new \stdClass());
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -195,7 +190,7 @@ class BridgeTest extends TestCase
             ->with('foo')
             ->willReturn($instance);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -217,7 +212,7 @@ class BridgeTest extends TestCase
             ->with('foo')
             ->willReturn(new \stdClass());
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -228,20 +223,20 @@ class BridgeTest extends TestCase
 
     public function testGetWithAnEntryExistNowhere(): void
     {
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
         $container
             ->method('has')
             ->willReturn(false);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -251,19 +246,20 @@ class BridgeTest extends TestCase
 
     public function testGetWithAnEntryExistAsServiceInSymfony(): void
     {
-        $this->getSfContainerMock()
+        $this->sfContainer = $this->createMock(SfContainer::class);
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(true);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('get')
             ->willReturn(new \stdClass());
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->expects($this->never())
             ->method('getParameter');
 
@@ -275,7 +271,7 @@ class BridgeTest extends TestCase
         $container->expects($this->never())
             ->method('get');
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -284,19 +280,20 @@ class BridgeTest extends TestCase
 
     public function testGetWithAnEntryExistInPHPDI(): void
     {
-        $this->getSfContainerMock()
+        $this->sfContainer = $this->createMock(SfContainer::class);
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->expects($this->never())
             ->method('get');
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->expects($this->never())
             ->method('getParameter');
 
@@ -309,7 +306,7 @@ class BridgeTest extends TestCase
             ->method('get')
             ->willReturn(new \stdClass());
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -318,19 +315,20 @@ class BridgeTest extends TestCase
 
     public function testGetWithAnEntryExistAsParameterInSymfony(): void
     {
-        $this->getSfContainerMock()
+        $this->sfContainer = $this->createMock(SfContainer::class);
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->expects($this->never())
             ->method('get');
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(true);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->expects($this->once())
             ->method('getParameter')
             ->willReturn('bar');
@@ -343,7 +341,7 @@ class BridgeTest extends TestCase
         $container->expects($this->never())
             ->method('get');
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -352,20 +350,20 @@ class BridgeTest extends TestCase
 
     public function testHasWithAnEntryExistNowhere(): void
     {
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
         $container
             ->method('has')
             ->willReturn(false);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -374,20 +372,20 @@ class BridgeTest extends TestCase
 
     public function testHasWithAnEntryExistAsServiceInSymfony(): void
     {
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(true);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
         $container
             ->method('has')
             ->willReturn(false);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -396,20 +394,20 @@ class BridgeTest extends TestCase
 
     public function testHasWithAnEntryExistInPHPDI(): void
     {
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(false);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
         $container
             ->method('has')
             ->willReturn(true);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 
@@ -418,20 +416,20 @@ class BridgeTest extends TestCase
 
     public function testHasWithAnEntryExistAsParameterInSymfony(): void
     {
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('has')
             ->willReturn(false);
 
-        $this->getSfContainerMock()
+        $this->getSfContainerStub()
             ->method('hasParameter')
             ->willReturn(true);
 
-        $container = $this->createMock(DIContainer::class);
+        $container = $this->createStub(DIContainer::class);
         $container
             ->method('has')
             ->willReturn(false);
 
-        $this->getDiBuilderMock()
+        $this->getDiBuilderStub()
             ->method('build')
             ->willReturn($container);
 

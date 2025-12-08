@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -39,10 +40,10 @@ class DIBridgeExtensionTest extends TestCase
 {
     private ?ContainerBuilder $container = null;
 
-    private function getContainerBuilderMock(): ContainerBuilder|\PHPUnit\Framework\MockObject\MockObject
+    private function getContainerBuilderStub(): ContainerBuilder&Stub
     {
         if (!$this->container instanceof ContainerBuilder) {
-            $this->container = $this->createMock(ContainerBuilder::class);
+            $this->container = $this->createStub(ContainerBuilder::class);
         }
 
         return $this->container;
@@ -55,7 +56,7 @@ class DIBridgeExtensionTest extends TestCase
 
     public function testLoadWithoutDefinitionsAndImport(): void
     {
-        $this->buildInstance()->load([], $this->getContainerBuilderMock());
+        $this->buildInstance()->load([], $this->getContainerBuilderStub());
         $this->assertTrue(true);
     }
 
@@ -68,7 +69,7 @@ class DIBridgeExtensionTest extends TestCase
                     'import' => ['hello' => 'world'],
                 ]
             ],
-            $this->getContainerBuilderMock()
+            $this->getContainerBuilderStub()
         );
         $this->assertTrue(true);
     }
@@ -84,14 +85,15 @@ class DIBridgeExtensionTest extends TestCase
                     'import' => ['hello' => 'world'],
                 ]
             ],
-            $this->getContainerBuilderMock()
+            $this->getContainerBuilderStub()
         );
         $this->assertTrue(true);
     }
 
     public function testLoadWithExtensions(): void
     {
-        $mock = $this->getContainerBuilderMock();
+        $this->container = $this->createMock(ContainerBuilder::class);
+        $mock = $this->getContainerBuilderStub();
         $mock->expects($this->exactly(2))
             ->method('has')
             ->willReturnMap([
@@ -131,7 +133,8 @@ class DIBridgeExtensionTest extends TestCase
 
     public function testExceptionOnLoadWithExtensionsWithInvalidService(): void
     {
-        $mock = $this->getContainerBuilderMock();
+        $this->container = $this->createMock(ContainerBuilder::class);
+        $mock = $this->getContainerBuilderStub();
         $mock->expects($this->exactly(1))
             ->method('has')
             ->willReturnMap([
@@ -162,7 +165,8 @@ class DIBridgeExtensionTest extends TestCase
 
     public function testExceptionOnLoadWithExtensionsWithInvalidClass(): void
     {
-        $mock = $this->getContainerBuilderMock();
+        $this->container = $this->createMock(ContainerBuilder::class);
+        $mock = $this->getContainerBuilderStub();
         $mock->expects($this->exactly(1))
             ->method('has')
             ->willReturn(false);
@@ -196,6 +200,6 @@ class DIBridgeExtensionTest extends TestCase
     public function testLoadErrorConfig(): void
     {
         $this->expectException(TypeError::class);
-        $this->buildInstance()->load(new stdClass(), $this->getContainerBuilderMock());
+        $this->buildInstance()->load(new stdClass(), $this->getContainerBuilderStub());
     }
 }
