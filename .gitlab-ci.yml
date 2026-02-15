@@ -20,12 +20,6 @@ test:8.4-upper:
     - make test
     - make qa
 
-test:8.5-lower:
-  extends: .abstract_tests
-  variables:
-    PHP_VERSION: '8.5'
-    DEPENDENCIES: lowest
-
 test:8.5-upper:
   extends: .abstract_tests
   variables:
