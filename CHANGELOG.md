@@ -1,5 +1,9 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [7.1.3] - 2026-04-28
+### Stable Release
+- Update PHPStan and fix false positive
+
 ## [7.1.2] - 2025-12-08
 ### Stable Release
 - Fix bc break introduced into patch of phpstan and phpunit

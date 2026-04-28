@@ -260,7 +260,7 @@ class BridgeBuilder implements BridgeBuilderInterface
             //Invokable object
             $reflectionObject = new ReflectionObject($callable);
             $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (is_array($callable) && is_callable($callable) && is_object($callable[0]) && is_string($callable[1])) {
+        } elseif (is_array($callable) && is_callable($callable) && is_object($callable[0])) {
             //Callable is a public method from object
             $reflectionObject = new ReflectionObject($callable[0]);
             $reflectionMethod = $reflectionObject->getMethod($callable[1]);
