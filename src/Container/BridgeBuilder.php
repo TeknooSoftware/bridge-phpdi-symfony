@@ -460,10 +460,83 @@ class BridgeBuilder implements BridgeBuilderInterface
     }
 
     /**
+     * Checks if a PHP-DI entry will be available as a Symfony parameter: the entry is exported by this builder as a
+     * parameter (string, scalar value, array without objects, environment variable) or is already a Symfony parameter.
+     */
+    private function isExportedAsParameter(ContainerInterface $container, string $entryName): bool
+    {
+        try {
+            $definition = $this->extractDIDefinition($container, $entryName);
+        } catch (ServiceNotFoundException) {
+            return $this->sfBuilder->hasParameter($entryName);
+        }
+
+        if ($definition instanceof ValueDefinition) {
+            $value = $definition->getValue();
+
+            return match (true) {
+                is_array($value) => !$this->containsObjects($this->convertArrayDefinition($value)),
+                is_object($value) => $value instanceof UnitEnum,
+                default => true,
+            };
+        }
+
+        return match (true) {
+            $definition instanceof StringDefinition,
+            $definition instanceof EnvironmentVariableDefinition => true,
+            $definition instanceof ArrayDefinition => !$this->containsObjects(
+                $this->convertArrayDefinition($definition->getValues())
+            ),
+            //Reference not resolved by PHP-DI, available only if it is a Symfony's parameter
+            $definition instanceof DIReference => $this->sfBuilder->hasParameter($entryName),
+            default => false,
+        };
+    }
+
+    private function convertEnvironmentVariable(
+        ContainerInterface $container,
+        EnvironmentVariableDefinition $diDefinition,
+        string $entryName,
+    ): void {
+        $variableName = $diDefinition->getVariableName();
+        if (!$diDefinition->isOptional()) {
+            $this->setEnvPlaceholder($entryName, '%env(' . $variableName . ')%');
+
+            return;
+        }
+
+        $defaultValue = $diDefinition->getDefaultValue();
+        if ($defaultValue instanceof DIReference) {
+            //The default value is another entry, it must be available as Symfony parameter
+            $defaultEntryName = $defaultValue->getTargetEntryName();
+            if (!$this->isExportedAsParameter($container, $defaultEntryName)) {
+                throw new InvalidArgumentException(
+                    "PHP-DI Bridge : The default value of the environment variable '$variableName' for '$entryName' "
+                    . "references '$defaultEntryName', not available as a Symfony parameter"
+                );
+            }
+        } elseif ($defaultValue instanceof DIDefinition) {
+            throw new InvalidArgumentException(
+                "PHP-DI Bridge : The default value of the environment variable '$variableName' for '$entryName' "
+                . 'must be a scalar, an array or a reference to a parameter entry, ' . $defaultValue::class . ' given'
+            );
+        } else {
+            $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
+            $this->setParameter($defaultEntryName, $defaultValue);
+        }
+
+        $this->setEnvPlaceholder($entryName, '%env(default:' . $defaultEntryName . ':' . $variableName . ')%');
+    }
+
+    /**
      * @param array<string, SfDefinition> $definitions
      */
-    private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
-    {
+    private function convertDefinition(
+        ContainerInterface $container,
+        DIDefinition $diDefinition,
+        string $entryName,
+        array &$definitions,
+    ): void {
         if ($diDefinition instanceof ObjectDefinition) {
             $definitions[$entryName] = $this->createDefinition($diDefinition->getClassName(), $entryName);
 
@@ -487,16 +560,7 @@ class BridgeBuilder implements BridgeBuilderInterface
         }
 
         if ($diDefinition instanceof EnvironmentVariableDefinition) {
-            if ($diDefinition->isOptional()) {
-                $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
-                $this->setParameter($defaultEntryName, $diDefinition->getDefaultValue());
-                $this->setEnvPlaceholder(
-                    $entryName,
-                    '%env(default:' . $defaultEntryName . ':' . $diDefinition->getVariableName() . ')%',
-                );
-            } else {
-                $this->setEnvPlaceholder($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
-            }
+            $this->convertEnvironmentVariable($container, $diDefinition, $entryName);
 
             return;
         }
@@ -550,7 +614,7 @@ class BridgeBuilder implements BridgeBuilderInterface
 
             $diDefinition = $this->extractDIDefinition($diContainer, $entryName);
 
-            $this->convertDefinition($diDefinition, $entryName, $definitions);
+            $this->convertDefinition($diContainer, $diDefinition, $entryName, $definitions);
         }
 
         $this->sfBuilder->addDefinitions($definitions);

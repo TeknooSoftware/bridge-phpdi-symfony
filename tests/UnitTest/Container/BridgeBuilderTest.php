@@ -28,6 +28,7 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
+use DI\Definition\Definition as DIDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
@@ -539,6 +540,114 @@ class BridgeBuilderTest extends TestCase
             );
 
         $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    public function testInitializeSymfonyContainerWithEnvironmentDefaultValueReferencingParameters(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryEnvToValue', 'entryEnvToString', 'entryEnvToSymfonyParameter', 'entryEnvToArray']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryEnvToValue', new EnvironmentVariableDefinition('ENV_A', true, new DIReference('aValue'))],
+                ['aValue', new ValueDefinition('foo')],
+                ['entryEnvToString', new EnvironmentVariableDefinition('ENV_B', true, new DIReference('aString'))],
+                ['aString', new DIReference('anotherString')],
+                ['anotherString', new StringDefinition('bar')],
+                [
+                    'entryEnvToSymfonyParameter',
+                    new EnvironmentVariableDefinition('ENV_C', true, new DIReference('kernel.environment')),
+                ],
+                ['kernel.environment', null],
+                ['entryEnvToArray', new EnvironmentVariableDefinition('ENV_D', true, new DIReference('anArray'))],
+                ['anArray', new ArrayDefinition(['a' => 1])],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->method('hasParameter')
+            ->willReturnMap([['kernel.environment', true]]);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->exactly(4))
+            ->method('setParameter')
+            ->willReturnCallback(
+                fn (): true => match (func_get_args()) {
+                    ['entryEnvToValue', '%env(default:aValue:ENV_A)%'] => true,
+                    ['entryEnvToString', '%env(default:aString:ENV_B)%'] => true,
+                    ['entryEnvToSymfonyParameter', '%env(default:kernel.environment:ENV_C)%'] => true,
+                    ['entryEnvToArray', '%env(default:anArray:ENV_D)%'] => true,
+                    default => throw new InvalidArgumentException('Invalid arguments ' . json_encode(func_get_args())),
+                }
+            );
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions');
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed, 1: ?DIDefinition}>
+     */
+    public static function provideInvalidEnvironmentDefaultValues(): iterable
+    {
+        yield 'reference to an object' => [new DIReference('target'), new ObjectDefinition('target', \stdClass::class)];
+        yield 'reference to a factory' => [
+            new DIReference('target'),
+            new FactoryDefinition('target', fn (): \stdClass => new \stdClass()),
+        ];
+        yield 'reference to an array with objects' => [
+            new DIReference('target'),
+            new ArrayDefinition([new DIReference('foo')]),
+        ];
+        yield 'reference to an object value' => [new DIReference('target'), new ValueDefinition(new \stdClass())];
+        yield 'reference to an unknown entry' => [new DIReference('target'), null];
+        yield 'nested object definition' => [new ObjectDefinition('target', \stdClass::class), null];
+    }
+
+    #[DataProvider('provideInvalidEnvironmentDefaultValues')]
+    public function testInitializeSymfonyContainerWithInvalidEnvironmentDefaultValue(
+        mixed $defaultValue,
+        ?DIDefinition $targetDefinition,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryEnv']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryEnv', new EnvironmentVariableDefinition('ENV_A', true, $defaultValue)],
+                ['target', $targetDefinition],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('setParameter');
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("default value of the environment variable 'ENV_A' for 'entryEnv'");
+
+        $this->buildInstance()->initializeSymfonyContainer();
     }
 
     private function prepareForInitializeSymfonyContainerTests(

@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -46,5 +47,13 @@ class InvalidConfigurationTest extends AbstractFunctionalTests
         $this->expectExceptionMessage('Circular reference detected');
 
         $this->createKernel('circular.yml');
+    }
+
+    public function testKernelRefusesAnEnvironmentVariableWithAnObjectDefinitionAsDefaultValue(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('default value of the environment variable');
+
+        $this->createKernel('env_invalid.yml');
     }
 }

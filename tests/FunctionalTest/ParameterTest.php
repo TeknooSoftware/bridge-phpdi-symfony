@@ -99,4 +99,16 @@ class ParameterTest extends AbstractFunctionalTests
         $this->assertFalse($container->has('array.plain'));
         $this->assertSame(['a' => 1, 'b' => ['c' => 'd']], $container->getParameter('array.plain'));
     }
+
+    public function testPhpDiEnvironmentVariablesWithDefaultValueReferencingAnotherEntry(): void
+    {
+        $kernel = $this->createKernel('env_nested.yml');
+        $container = $kernel->getContainer();
+
+        $this->assertSame('default from php-di', $container->getParameter('env.nested'));
+        $this->assertSame('dev', $container->getParameter('env.symfony_parameter'));
+
+        $bridge = $container->get(ContainerInterface::class);
+        $this->assertSame('default from php-di', $bridge->get('env.nested'));
+    }
 }
