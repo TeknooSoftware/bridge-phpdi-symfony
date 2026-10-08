@@ -1,0 +1,61 @@
+<?php
+
+/*
+ * Symfony Bridge.
+ *
+ * LICENSE
+ *
+ * This source file is subject to the 3-Clause BSD license
+ * it is available in LICENSE file at the root of this package
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to richard@teknoo.software so we can send you a copy immediately.
+ *
+ *
+ * @copyright   Copyright (c) EIRL Richard Déloge (https://deloge.io - richard@deloge.io)
+ * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
+ * @copyright Matthieu Napoli (http://mnapoli.fr/)
+ *
+ * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
+ *
+ * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
+ * @author      Richard Déloge <richard@teknoo.software>
+ */
+
+declare(strict_types=1);
+
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
+
+use PHPUnit\Framework\Attributes\CoversNothing;
+use Psr\Container\ContainerInterface;
+
+/**
+ * Checks how PHP-DI values, strings, arrays and environment variables are exported as Symfony parameters.
+ */
+#[CoversNothing]
+class ParameterTest extends AbstractFunctionalTests
+{
+    public function testPercentSignsInPhpDiValuesAreKeptLiteralInSymfony(): void
+    {
+        $kernel = $this->createKernel('percent.yml');
+        $container = $kernel->getContainer();
+
+        $this->assertSame('a%b%c', $container->getParameter('percent.value'));
+        $this->assertSame('100%%', $container->getParameter('percent.escaped'));
+        $this->assertSame(['k' => 'x%y%', 'n' => ['z%']], $container->getParameter('percent.array'));
+        $this->assertSame('d%e%f', $container->getParameter('percent.env'));
+    }
+
+    public function testPhpDiStringExpressionsAreResolvedByPhpDiAndKeptLiteralInSymfony(): void
+    {
+        $kernel = $this->createKernel('percent.yml');
+        $container = $kernel->getContainer();
+
+        //Symfony knows only the raw expression
+        $this->assertSame('{percent.value}/d', $container->getParameter('percent.string'));
+
+        //PHP-DI resolves it, through the bridge
+        $bridge = $container->get(ContainerInterface::class);
+        $this->assertSame('a%b%c/d', $bridge->get('percent.string'));
+    }
+}

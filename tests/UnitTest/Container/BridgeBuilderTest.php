@@ -47,10 +47,12 @@ use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\EnumFixture;
 use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\FactoryFixture;
 use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\InvokableFixture;
 
 use function func_get_args;
+use function json_encode;
 
 #[CoversClass(BridgeBuilder::class)]
 class BridgeBuilderTest extends TestCase
@@ -414,6 +416,54 @@ class BridgeBuilderTest extends TestCase
         $this->expectExceptionMessage($expectedMessage);
 
         $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerEscapesPercentSignsInParameters(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryString', 'entryValue', 'entryArray', 'entryEnv', 'entryEnum']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryString', new StringDefinition('a%b%c')],
+                ['entryValue', new ValueDefinition('100%%')],
+                ['entryArray', new ArrayDefinition(['k' => 'x%y%', 'n' => new ArrayDefinition(['z%'])])],
+                ['entryEnv', new EnvironmentVariableDefinition('ENV_NAME', true, 'd%e%f')],
+                ['entryEnum', new ValueDefinition(EnumFixture::Foo)],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->exactly(6))
+            ->method('setParameter')
+            ->willReturnCallback(
+                fn (): true => match (func_get_args()) {
+                    ['entryString', 'a%%b%%c'] => true,
+                    ['entryValue', '100%%%%'] => true,
+                    ['entryArray', ['k' => 'x%%y%%', 'n' => ['z%%']]] => true,
+                    [BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryEnv', 'd%%e%%f'] => true,
+                    [
+                        'entryEnv',
+                        '%env(default:' . BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryEnv:ENV_NAME)%',
+                    ] => true,
+                    ['entryEnum', EnumFixture::Foo] => true,
+                    default => throw new InvalidArgumentException('Invalid arguments ' . json_encode(func_get_args())),
+                }
+            );
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions');
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
     }
 
     private function prepareForInitializeSymfonyContainerTests(

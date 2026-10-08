@@ -66,6 +66,7 @@ use function iterator_to_array;
 use function krsort;
 use function method_exists;
 use function str_contains;
+use function str_replace;
 
 /**
  * Class used during the compilation of Symfony.
@@ -213,6 +214,41 @@ class BridgeBuilder implements BridgeBuilderInterface
         return $definition;
     }
 
+    /**
+     * Symfony resolves '%name%' placeholders in parameters, PHP-DI does not. Percent signs in values coming from
+     * PHP-DI are escaped to keep them literal in the Symfony container.
+     *
+     * @param array<int|string, mixed>|bool|float|int|string|UnitEnum|null $value
+     * @return array<int|string, mixed>|bool|float|int|string|UnitEnum|null
+     */
+    private function escapeValue(
+        array|bool|float|int|string|UnitEnum|null $value,
+    ): array|bool|float|int|string|UnitEnum|null {
+        if (is_string($value)) {
+            return str_replace('%', '%%', $value);
+        }
+
+        if (is_array($value)) {
+            $escaped = [];
+            foreach ($value as $key => $item) {
+                if (is_string($item) || is_array($item)) {
+                    $escaped[$key] = $this->escapeValue($item);
+
+                    continue;
+                }
+
+                $escaped[$key] = $item;
+            }
+
+            return $escaped;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Register a value coming from PHP-DI as Symfony parameter, the value is escaped to be kept literal.
+     */
     private function setParameter(string $parameterName, mixed $value): void
     {
         if (
@@ -228,8 +264,16 @@ class BridgeBuilder implements BridgeBuilderInterface
 
         $this->sfBuilder->setParameter(
             $parameterName,
-            $value
+            $this->escapeValue($value)
         );
+    }
+
+    /**
+     * Register a '%env(...)%' placeholder built by this bridge, it must not be escaped to be resolved by Symfony.
+     */
+    private function setEnvPlaceholder(string $parameterName, string $placeholder): void
+    {
+        $this->sfBuilder->setParameter($parameterName, $placeholder);
     }
 
     private function extractDIDefinition(ContainerInterface $container, string $entryName): DIDefinition
@@ -403,12 +447,12 @@ class BridgeBuilder implements BridgeBuilderInterface
             if ($diDefinition->isOptional()) {
                 $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
                 $this->setParameter($defaultEntryName, $diDefinition->getDefaultValue());
-                $this->setParameter(
+                $this->setEnvPlaceholder(
                     $entryName,
                     '%env(default:' . $defaultEntryName . ':' . $diDefinition->getVariableName() . ')%',
                 );
             } else {
-                $this->setParameter($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
+                $this->setEnvPlaceholder($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
             }
 
             return;
