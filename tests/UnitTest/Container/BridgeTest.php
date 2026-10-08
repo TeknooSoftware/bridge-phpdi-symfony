@@ -221,6 +221,33 @@ class BridgeTest extends TestCase
         $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
     }
 
+    public function testPhpDiContainerIsBuiltOnlyOnce(): void
+    {
+        $container = $this->createStub(DIContainer::class);
+        $container
+            ->method('has')
+            ->willReturn(true);
+
+        $container
+            ->method('get')
+            ->willReturn(new \stdClass());
+
+        $this->diBuilder = $this->createMock(DIContainerBuilder::class);
+        $this->getDiBuilderStub()
+            ->expects($this->once())
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerStub()
+            ->method('has')
+            ->willReturn(false);
+
+        $bridge = $this->buildInstance();
+        $this->assertInstanceOf(\stdClass::class, $bridge('foo'));
+        $this->assertInstanceOf(\stdClass::class, $bridge->get('foo'));
+        $this->assertTrue($bridge->has('foo'));
+    }
+
     public function testGetWithAnEntryExistNowhere(): void
     {
         $this->getSfContainerStub()

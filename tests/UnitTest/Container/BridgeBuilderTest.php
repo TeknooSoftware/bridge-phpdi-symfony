@@ -698,6 +698,52 @@ class BridgeBuilderTest extends TestCase
         $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
     }
 
+    public function testDefinitionsFilesAreOrderedByPriorityAndDeduplicated(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            ['high', 'foo', 'bar', 'low'],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition([
+                ['priority' => 0, 'file' => 'foo'],
+                ['file' => 'bar'],
+                ['priority' => -5, 'file' => 'low'],
+            ])
+            ->loadDefinition([
+                ['priority' => 10, 'file' => 'high'],
+                //Duplicated file, the last declaration wins but the position is kept
+                ['priority' => 0, 'file' => 'foo'],
+            ])
+            ->initializeSymfonyContainer());
+    }
+
     private function prepareForInitializeSymfonyContainerTests(
         array $definitionsFiles,
         ?string $compilationPath,

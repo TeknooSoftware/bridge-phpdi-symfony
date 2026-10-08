@@ -91,7 +91,7 @@ class BridgeBuilder implements BridgeBuilderInterface
 {
     use BridgeTrait;
 
-    public const PREFIX_FOR_DEFAULT_ENV_VALUE = 'di_bridge_default_';
+    public const PREFIX_FOR_DEFAULT_ENV_VALUE = BridgeBuilderInterface::PREFIX_FOR_DEFAULT_ENV_VALUE;
 
     /**
      * Entries registered by PHP-DI itself in every container, they must not be exported into Symfony.
@@ -145,7 +145,7 @@ class BridgeBuilder implements BridgeBuilderInterface
      */
     public function loadDefinition(array $definitions): self
     {
-        foreach ($definitions as &$definition) {
+        foreach ($definitions as $definition) {
             $this->definitionsFiles[$definition['file']] = $definition;
         }
 
@@ -165,16 +165,15 @@ class BridgeBuilder implements BridgeBuilderInterface
     private function getOrderedDefinitionsFiles(): Traversable
     {
         $toOrder = [];
-        foreach ($this->definitionsFiles as &$definitionFile) {
+        foreach ($this->definitionsFiles as $definitionFile) {
             $toOrder[(int) ($definitionFile['priority'] ?? 0)][] = $definitionFile['file'];
         }
 
-        unset($definitionFile);
         krsort($toOrder);
 
         //Can not use yield from with iterator_to_array, skip first entries
-        foreach ($toOrder as &$list) {
-            foreach ($list as &$file) {
+        foreach ($toOrder as $list) {
+            foreach ($list as $file) {
                 yield $file;
             }
         }
@@ -420,7 +419,7 @@ class BridgeBuilder implements BridgeBuilderInterface
     private function convertArrayDefinition(array $array): array
     {
         $final = [];
-        foreach ($array as $key => &$value) {
+        foreach ($array as $key => $value) {
             if ($value instanceof ArrayDefinition) {
                 $final[$key] = $this->convertArrayDefinition($value->getValues());
             } else {

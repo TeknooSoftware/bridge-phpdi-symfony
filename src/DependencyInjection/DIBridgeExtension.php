@@ -195,10 +195,9 @@ class DIBridgeExtension extends Extension implements PrependExtensionInterface
             }
         }
 
-        unset($extensionConfiguration);
         krsort($toOrder);
 
-        foreach ($toOrder as &$namesList) {
+        foreach ($toOrder as $namesList) {
             foreach ($namesList as $name) {
                 if (isset($this->preloadedExtensions[$name])) {
                     $this->configureExtension($this->preloadedExtensions[$name], $builder);
