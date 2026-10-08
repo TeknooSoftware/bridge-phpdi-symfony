@@ -28,16 +28,23 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use DI\Definition\Source\SourceCache;
 use PHPUnit\Framework\Attributes\CoversNothing;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
 
+use function interface_exists;
+
 #[CoversNothing]
-class ContainerAwareTests extends AbstractFunctionalTests
+class ContainerAwareTest extends AbstractFunctionalTests
 {
     /**
      * @link https://github.com/PHP-DI/Symfony-Bridge/issues/2
      */
     public function testContainerAwareWithoutCacheAndWithoutCompilation(): void
     {
+        if (!interface_exists(ContainerAwareInterface::class)) {
+            self::markTestSkipped('Test only for Symfony prior to 7');
+        }
+
         $kernel = $this->createKernel('empty.yml');
         $container = $kernel->getContainer();
 
@@ -52,6 +59,10 @@ class ContainerAwareTests extends AbstractFunctionalTests
      */
     public function testContainerAwareWithCacheAndWithoutCompilation(): void
     {
+        if (!interface_exists(ContainerAwareInterface::class)) {
+            self::markTestSkipped('Test only for Symfony prior to 7');
+        }
+
         if (!SourceCache::isSupported()) {
             self::markTestSkipped('APCu is not enabled');
         }
@@ -70,6 +81,10 @@ class ContainerAwareTests extends AbstractFunctionalTests
      */
     public function testContainerAwareWithoutCacheAndWithCompilation(): void
     {
+        if (!interface_exists(ContainerAwareInterface::class)) {
+            self::markTestSkipped('Test only for Symfony prior to 7');
+        }
+
         $kernel = $this->createKernel('empty_with_compilation.yml');
         $container = $kernel->getContainer();
 
