@@ -57,4 +57,21 @@ class BridgeRegistrationTest extends AbstractFunctionalTests
 
         $this->assertFalse($kernel->getContainer()->has(Bridge::class));
     }
+
+    public function testPhpDiInternalEntriesAreNotExposedAsSymfonyServices(): void
+    {
+        $kernel = $this->createKernel('empty.yml');
+        $container = $kernel->getContainer();
+
+        foreach (
+            [
+                \Psr\Container\ContainerInterface::class,
+                \DI\Container::class,
+                \DI\FactoryInterface::class,
+                \Invoker\InvokerInterface::class,
+            ] as $id
+        ) {
+            $this->assertFalse($container->has($id), "Internal PHP-DI entry $id must not be registered into Symfony");
+        }
+    }
 }

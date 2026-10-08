@@ -36,7 +36,10 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use DI\FactoryInterface;
 use InvalidArgumentException;
+use Invoker\InvokerInterface;
+use Psr\Container\ContainerInterface as PsrContainerInterface;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
@@ -57,6 +60,7 @@ use function count;
 use function function_exists;
 use function gettype;
 use function implode;
+use function in_array;
 use function interface_exists;
 use function is_array;
 use function is_object;
@@ -88,6 +92,16 @@ class BridgeBuilder implements BridgeBuilderInterface
     use BridgeTrait;
 
     public const PREFIX_FOR_DEFAULT_ENV_VALUE = 'di_bridge_default_';
+
+    /**
+     * Entries registered by PHP-DI itself in every container, they must not be exported into Symfony.
+     */
+    private const array INTERNAL_ENTRIES = [
+        PsrContainerInterface::class,
+        DIContainer::class,
+        FactoryInterface::class,
+        InvokerInterface::class,
+    ];
 
     /**
      * @var array<string, array{priority?:int, file:string}>
@@ -606,6 +620,10 @@ class BridgeBuilder implements BridgeBuilderInterface
         ];
 
         foreach ($diContainer->getKnownEntryNames() as $entryName) {
+            if (in_array($entryName, self::INTERNAL_ENTRIES, true)) {
+                continue;
+            }
+
             if (class_exists($entryName) || interface_exists($entryName)) {
                 $definitions[$entryName] = $this->createDefinition($entryName, $entryName);
 

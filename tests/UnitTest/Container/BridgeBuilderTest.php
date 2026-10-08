@@ -650,6 +650,54 @@ class BridgeBuilderTest extends TestCase
         $this->buildInstance()->initializeSymfonyContainer();
     }
 
+    public function testInitializeSymfonyContainerIgnoresPhpDiInternalEntries(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createMock(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                \Psr\Container\ContainerInterface::class,
+                DIContainer::class,
+                \DI\FactoryInterface::class,
+                \Invoker\InvokerInterface::class,
+                \DateTime::class,
+            ]);
+
+        $container->expects($this->never())
+            ->method('extractDefinition');
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    \DateTime::class => new SfDefinition(\DateTime::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([\DateTime::class])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
     private function prepareForInitializeSymfonyContainerTests(
         array $definitionsFiles,
         ?string $compilationPath,

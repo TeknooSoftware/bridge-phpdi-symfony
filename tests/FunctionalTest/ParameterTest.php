@@ -28,7 +28,6 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Closure;
-use Psr\Container\ContainerInterface;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ArrayConsumer;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Product;
@@ -59,7 +58,7 @@ class ParameterTest extends AbstractFunctionalTests
         $this->assertSame('{percent.value}/d', $container->getParameter('percent.string'));
 
         //PHP-DI resolves it, through the bridge
-        $bridge = $container->get(ContainerInterface::class);
+        $bridge = $container->get('test.bridge');
         $this->assertSame('a%b%c/d', $bridge->get('percent.string'));
     }
 
@@ -108,7 +107,7 @@ class ParameterTest extends AbstractFunctionalTests
         $this->assertSame('default from php-di', $container->getParameter('env.nested'));
         $this->assertSame('dev', $container->getParameter('env.symfony_parameter'));
 
-        $bridge = $container->get(ContainerInterface::class);
+        $bridge = $container->get('test.bridge');
         $this->assertSame('default from php-di', $bridge->get('env.nested'));
     }
 }

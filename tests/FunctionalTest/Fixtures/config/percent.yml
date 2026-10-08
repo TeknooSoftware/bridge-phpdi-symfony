@@ -1,3 +1,8 @@
 di_bridge:
   definitions:
     - '%kernel.project_dir%/config/di_percent.php'
+
+services:
+  test.bridge:
+    alias: Teknoo\DI\SymfonyBridge\Container\Bridge
+    public: true
