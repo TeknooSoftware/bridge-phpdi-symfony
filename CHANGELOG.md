@@ -20,6 +20,7 @@
   injectable services returning an array.
 - `DI\env()` accepts a `DI\get()` reference to a parameter entry as default value.
 - `extensions` declared by a Symfony service id now work in a real kernel.
+- Require `php-di/invoker` ^2.2.0, older releases trigger PHP 8.4 deprecations (implicit nullable parameters).
 
 #### Behavior changes
 - `%param%` inside a PHP-DI value is no longer resolved by Symfony, use `DI\get('param')`.

@@ -108,7 +108,7 @@ This library requires :
 
     * PHP 8.4+
     * A PHP autoloader (Composer is recommended)
-    * PHP-DI 7.1+
+    * PHP-DI 7.1+ (with PHP-DI Invoker 2.2+)
     * Symfony/dependency-injection 6.4, 7.4 or 8.1+
     * Symfony/http-kernel 6.4, 7.4 or 8.1+
     * Symfony/config 6.4, 7.4 or 8.1+

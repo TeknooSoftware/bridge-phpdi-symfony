@@ -40,7 +40,8 @@ Unlike the official Symfony-PHP-DI bridge, this implementation:
 - Keep the code compatible with PHP 8.4, do not use PHP 8.5 only features.
 
 ### Dependencies
-- `php-di/php-di` ^7.1.1
+- `php-di/php-di` ^7.1.1 and `php-di/invoker` ^2.2.0 (older releases use implicit nullable parameters, deprecated
+  since PHP 8.4)
 - `symfony/dependency-injection`, `symfony/http-kernel`, `symfony/config` ^6.4.24 || ^7.4 || ^8.1
 
 ## Development Workflow
