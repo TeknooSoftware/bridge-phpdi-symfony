@@ -467,6 +467,80 @@ class BridgeBuilderTest extends TestCase
         $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
     }
 
+    public function testInitializeSymfonyContainerWithArraysContainingDefinitionsRegisteredAsServices(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryArrayWithReferences',
+                'entryArrayWithNestedObject',
+                'entryValueArrayWithObject',
+                'entryPlainArray',
+            ]);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                [
+                    'entryArrayWithReferences',
+                    new ArrayDefinition(['a' => new DIReference('x'), 'b' => 'scalar']),
+                ],
+                [
+                    'entryArrayWithNestedObject',
+                    new ArrayDefinition([
+                        'n' => new ArrayDefinition([new ObjectDefinition('o', \stdClass::class)]),
+                    ]),
+                ],
+                ['entryValueArrayWithObject', new ValueDefinition(['k' => [new \stdClass()]])],
+                ['entryPlainArray', new ArrayDefinition(['k' => 1, 'e' => EnumFixture::Bar, 'n' => ['x']])],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('setParameter')
+            ->with('entryPlainArray', ['k' => 1, 'e' => EnumFixture::Bar, 'n' => ['x']]);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryArrayWithReferences' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryArrayWithReferences'])
+                        ->setPublic(false),
+                    'entryArrayWithNestedObject' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryArrayWithNestedObject'])
+                        ->setPublic(false),
+                    'entryValueArrayWithObject' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryValueArrayWithObject'])
+                        ->setPublic(false),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
     private function prepareForInitializeSymfonyContainerTests(
         array $definitionsFiles,
         ?string $compilationPath,

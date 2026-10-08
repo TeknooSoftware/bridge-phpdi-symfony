@@ -29,6 +29,8 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Closure;
 use Psr\Container\ContainerInterface;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ArrayConsumer;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Product;
 
 /**
@@ -75,5 +77,26 @@ class ParameterTest extends AbstractFunctionalTests
 
         $this->assertFalse($container->has('value.scalar'));
         $this->assertSame(42, $container->getParameter('value.scalar'));
+    }
+
+    public function testPhpDiArraysContainingDefinitionsAreInjectableIntoSymfonyServices(): void
+    {
+        $kernel = $this->createKernel('array_refs.yml');
+        $container = $kernel->getContainer();
+
+        //Symfony's Container::get() can only return objects, these entries are private services, only injectable
+        $this->assertFalse($container->has('array.handlers'));
+        $this->assertFalse($container->has('array.nested'));
+
+        $consumer = $container->get('array.consumer');
+        $this->assertInstanceOf(ArrayConsumer::class, $consumer);
+        $this->assertCount(2, $consumer->handlers);
+        $this->assertInstanceOf(Class2::class, $consumer->handlers[0]);
+        $this->assertSame($container->get('class2'), $consumer->handlers[0]);
+        $this->assertInstanceOf(Product::class, $consumer->handlers[1]);
+        $this->assertInstanceOf(Class2::class, $consumer->nested['level1']['level2']);
+
+        $this->assertFalse($container->has('array.plain'));
+        $this->assertSame(['a' => 1, 'b' => ['c' => 'd']], $container->getParameter('array.plain'));
     }
 }

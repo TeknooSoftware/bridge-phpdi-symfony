@@ -204,12 +204,13 @@ class BridgeBuilder implements BridgeBuilderInterface
 
     private function createDefinition(
         string $className,
-        string $diEntryName
+        string $diEntryName,
+        bool $public = true,
     ): SfDefinition {
         $definition = new SfDefinition($className);
         $definition->setFactory(new SfReference(Bridge::class));
         $definition->setArguments([$diEntryName]);
-        $definition->setPublic(true);
+        $definition->setPublic($public);
 
         return $definition;
     }
@@ -417,6 +418,48 @@ class BridgeBuilder implements BridgeBuilderInterface
     }
 
     /**
+     * Symfony parameters can only hold scalars, enums, null and arrays of them. An array holding objects (nested
+     * PHP-DI definitions like DI\get() or DI\create(), or raw objects) must be registered as a service.
+     *
+     * @param array<int|string, mixed> $array
+     */
+    private function containsObjects(array $array): bool
+    {
+        foreach ($array as $value) {
+            if (is_array($value)) {
+                if ($this->containsObjects($value)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (is_object($value) && !$value instanceof UnitEnum) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<int|string, mixed> $values
+     * @param array<string, SfDefinition> $definitions
+     */
+    private function exportArray(array $values, string $entryName, array &$definitions): void
+    {
+        if ($this->containsObjects($values)) {
+            //Resolved by PHP-DI at runtime, registered into Symfony as a private service returning an array :
+            //Symfony's Container::get() can only return objects, but arrays can be injected as arguments.
+            $definitions[$entryName] = $this->createDefinition('array', $entryName, false);
+
+            return;
+        }
+
+        $this->setParameter($entryName, $values);
+    }
+
+    /**
      * @param array<string, SfDefinition> $definitions
      */
     private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
@@ -473,13 +516,19 @@ class BridgeBuilder implements BridgeBuilderInterface
                 return;
             }
 
+            if (is_array($value)) {
+                $this->exportArray($this->convertArrayDefinition($value), $entryName, $definitions);
+
+                return;
+            }
+
             $this->setParameter($entryName, $value);
 
             return;
         }
 
         if ($diDefinition instanceof ArrayDefinition) {
-            $this->setParameter($entryName, $this->convertArrayDefinition($diDefinition->getValues()));
+            $this->exportArray($this->convertArrayDefinition($diDefinition->getValues()), $entryName, $definitions);
         }
     }
 
