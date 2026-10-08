@@ -51,6 +51,7 @@ use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\EnumFixture;
 use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\FactoryFixture;
 use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\InvokableFixture;
 
+use function fopen;
 use function func_get_args;
 use function json_encode;
 
@@ -665,15 +666,15 @@ class BridgeBuilderTest extends TestCase
         $container
             ->method('getKnownEntryNames')
             ->willReturn([
-                'entryAboutObject',
+                'entryAboutResource',
             ]);
 
         $container->expects($this->exactly(1))
             ->method('extractDefinition')
             ->willReturnMap([
                 [
-                    'entryAboutObject',
-                    (new ValueDefinition(new \stdClass()))
+                    'entryAboutResource',
+                    (new ValueDefinition(fopen('php://memory', 'r')))
                 ],
             ]);
 
@@ -695,6 +696,63 @@ class BridgeBuilderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerWithObjectValuesRegisteredAsServices(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryAboutObject',
+                'entryAboutClosure',
+            ]);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryAboutObject', new ValueDefinition(new \stdClass())],
+                ['entryAboutClosure', new ValueDefinition(fn (): \stdClass => new \stdClass())],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('setParameter');
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryAboutObject' => new SfDefinition(\stdClass::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryAboutObject'])
+                        ->setPublic(true),
+                    'entryAboutClosure' => new SfDefinition(\Closure::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryAboutClosure'])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
     }
 
     public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation(): void

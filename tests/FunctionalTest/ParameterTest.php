@@ -27,7 +27,9 @@ declare(strict_types=1);
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
+use Closure;
 use Psr\Container\ContainerInterface;
+use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Product;
 
 /**
  * Checks how PHP-DI values, strings, arrays and environment variables are exported as Symfony parameters.
@@ -57,5 +59,21 @@ class ParameterTest extends AbstractFunctionalTests
         //PHP-DI resolves it, through the bridge
         $bridge = $container->get(ContainerInterface::class);
         $this->assertSame('a%b%c/d', $bridge->get('percent.string'));
+    }
+
+    public function testPhpDiObjectValuesAreRegisteredAsSymfonyServices(): void
+    {
+        $kernel = $this->createKernel('values.yml');
+        $container = $kernel->getContainer();
+
+        $this->assertTrue($container->has('value.object'));
+        $this->assertInstanceOf(Product::class, $container->get('value.object'));
+        $this->assertSame($container->get('value.object'), $container->get('value.object'));
+
+        $this->assertTrue($container->has('value.closure'));
+        $this->assertInstanceOf(Closure::class, $container->get('value.closure'));
+
+        $this->assertFalse($container->has('value.scalar'));
+        $this->assertSame(42, $container->getParameter('value.scalar'));
     }
 }

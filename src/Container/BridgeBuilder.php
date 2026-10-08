@@ -465,7 +465,15 @@ class BridgeBuilder implements BridgeBuilderInterface
         }
 
         if ($diDefinition instanceof ValueDefinition) {
-            $this->setParameter($entryName, $diDefinition->getValue());
+            $value = $diDefinition->getValue();
+            if (is_object($value) && !$value instanceof UnitEnum) {
+                //Objects (and closures) can not be Symfony parameters, they are registered as services
+                $definitions[$entryName] = $this->createDefinition($value::class, $entryName);
+
+                return;
+            }
+
+            $this->setParameter($entryName, $value);
 
             return;
         }
