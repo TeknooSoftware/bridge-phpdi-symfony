@@ -1,0 +1,5 @@
+di_bridge:
+  definitions:
+    - '%kernel.project_dir%/config/di.php'
+  extensions:
+    - { name: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Extension, priority: 10 }
