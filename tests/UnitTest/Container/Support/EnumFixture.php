@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * Symfony Bridge.
  *
@@ -23,16 +21,12 @@ declare(strict_types=1);
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
-defined('RUN_CLI_MODE')
-    || define('RUN_CLI_MODE', true);
+declare(strict_types=1);
 
-defined('PHPUNIT')
-    || define('PHPUNIT', true);
+namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support;
 
-ini_set('memory_limit', '256M');
-
-require_once __DIR__.'/../vendor/autoload.php';
-
-date_default_timezone_set('UTC');
-
-error_reporting(E_ALL);
+enum EnumFixture
+{
+    case Foo;
+    case Bar;
+}

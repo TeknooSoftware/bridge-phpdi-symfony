@@ -33,7 +33,7 @@ use Psr\Container\ContainerInterface;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ContainerAwareController;
 
 #[CoversNothing]
-class KernelTests extends AbstractFunctionalTests
+class KernelTest extends AbstractFunctionalTests
 {
     public function testKernelShouldBoot(): void
     {

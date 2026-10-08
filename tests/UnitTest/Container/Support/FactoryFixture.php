@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * Symfony Bridge.
  *
@@ -23,16 +21,36 @@ declare(strict_types=1);
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
-defined('RUN_CLI_MODE')
-    || define('RUN_CLI_MODE', true);
+declare(strict_types=1);
 
-defined('PHPUNIT')
-    || define('PHPUNIT', true);
+namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support;
 
-ini_set('memory_limit', '256M');
+use stdClass;
 
-require_once __DIR__.'/../vendor/autoload.php';
+class FactoryFixture
+{
+    public function create(): stdClass
+    {
+        return new stdClass();
+    }
 
-date_default_timezone_set('UTC');
+    public static function createStatic(): stdClass
+    {
+        return new stdClass();
+    }
 
-error_reporting(E_ALL);
+    public function createSelf(): self
+    {
+        return $this;
+    }
+
+    public function createStatic2(): static
+    {
+        return $this;
+    }
+
+    public function withoutReturnType()
+    {
+        return new stdClass();
+    }
+}

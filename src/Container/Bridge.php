@@ -73,11 +73,7 @@ class Bridge implements ContainerInterface
      */
     private function getDIContainer(): DIContainer
     {
-        if (null !== $this->diContainer) {
-            return $this->diContainer;
-        }
-
-        return $this->diContainer = $this->buildContainer(
+        return $this->diContainer ??= $this->buildContainer(
             $this->diBuilder,
             $this,
             $this->definitionsFiles,

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * Symfony Bridge.
  *
@@ -16,6 +14,7 @@ declare(strict_types=1);
  *
  * @copyright   Copyright (c) EIRL Richard Déloge (https://deloge.io - richard@deloge.io)
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
+ * @copyright Matthieu Napoli (http://mnapoli.fr/)
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
@@ -23,16 +22,25 @@ declare(strict_types=1);
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
-defined('RUN_CLI_MODE')
-    || define('RUN_CLI_MODE', true);
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 
-defined('PHPUNIT')
-    || define('PHPUNIT', true);
+use Teknoo\DI\SymfonyBridge\Container\BridgeBuilderInterface;
+use Teknoo\DI\SymfonyBridge\Extension\ExtensionInterface;
 
-ini_set('memory_limit', '256M');
+class Extension implements ExtensionInterface
+{
+    public static int $configuredCounter = 0;
 
-require_once __DIR__.'/../vendor/autoload.php';
+    public static function create(): ExtensionInterface
+    {
+        return new self();
+    }
 
-date_default_timezone_set('UTC');
+    public function configure(BridgeBuilderInterface $builder): ExtensionInterface
+    {
+        ++self::$configuredCounter;
+        $builder->loadDefinition([['file' => __DIR__ . '/config/di_extension.php']]);
 
-error_reporting(E_ALL);
+        return $this;
+    }
+}

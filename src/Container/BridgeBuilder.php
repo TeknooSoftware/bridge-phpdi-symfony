@@ -36,10 +36,14 @@ use DI\Definition\ObjectDefinition;
 use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
+use DI\FactoryInterface;
 use InvalidArgumentException;
+use Invoker\InvokerInterface;
+use ReflectionException;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionObject;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
@@ -49,16 +53,23 @@ use Teknoo\DI\SymfonyBridge\Container\Exception\InvalidContainerException;
 use Traversable;
 use UnitEnum;
 
+use function array_keys;
 use function class_exists;
+use function count;
+use function function_exists;
 use function gettype;
+use function implode;
+use function in_array;
 use function interface_exists;
 use function is_array;
-use function is_callable;
 use function is_object;
 use function is_scalar;
 use function is_string;
 use function iterator_to_array;
 use function krsort;
+use function method_exists;
+use function str_contains;
+use function str_replace;
 
 /**
  * Class used during the compilation of Symfony.
@@ -79,7 +90,17 @@ class BridgeBuilder implements BridgeBuilderInterface
 {
     use BridgeTrait;
 
-    public const PREFIX_FOR_DEFAULT_ENV_VALUE = 'di_bridge_default_';
+    public const PREFIX_FOR_DEFAULT_ENV_VALUE = BridgeBuilderInterface::PREFIX_FOR_DEFAULT_ENV_VALUE;
+
+    /**
+     * Entries registered by PHP-DI itself in every container, they must not be exported into Symfony.
+     * `Psr\Container\ContainerInterface` (resolved to the bridge) and `DI\Container` are intentionally exported,
+     * to allow Symfony services and tests to reach the bridge or the PHP-DI container.
+     */
+    private const array INTERNAL_ENTRIES = [
+        FactoryInterface::class,
+        InvokerInterface::class,
+    ];
 
     /**
      * @var array<string, array{priority?:int, file:string}>
@@ -196,16 +217,52 @@ class BridgeBuilder implements BridgeBuilderInterface
 
     private function createDefinition(
         string $className,
-        string $diEntryName
+        string $diEntryName,
+        bool $public = true,
     ): SfDefinition {
         $definition = new SfDefinition($className);
         $definition->setFactory(new SfReference(Bridge::class));
         $definition->setArguments([$diEntryName]);
-        $definition->setPublic(true);
+        $definition->setPublic($public);
 
         return $definition;
     }
 
+    /**
+     * Symfony resolves '%name%' placeholders in parameters, PHP-DI does not. Percent signs in values coming from
+     * PHP-DI are escaped to keep them literal in the Symfony container.
+     *
+     * @param array<int|string, mixed>|bool|float|int|string|UnitEnum|null $value
+     * @return array<int|string, mixed>|bool|float|int|string|UnitEnum|null
+     */
+    private function escapeValue(
+        array|bool|float|int|string|UnitEnum|null $value,
+    ): array|bool|float|int|string|UnitEnum|null {
+        if (is_string($value)) {
+            return str_replace('%', '%%', $value);
+        }
+
+        if (is_array($value)) {
+            $escaped = [];
+            foreach ($value as $key => &$item) {
+                if (is_string($item) || is_array($item)) {
+                    $escaped[$key] = $this->escapeValue($item);
+
+                    continue;
+                }
+
+                $escaped[$key] = $item;
+            }
+
+            return $escaped;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Register a value coming from PHP-DI as Symfony parameter, the value is escaped to be kept literal.
+     */
     private function setParameter(string $parameterName, mixed $value): void
     {
         if (
@@ -221,19 +278,36 @@ class BridgeBuilder implements BridgeBuilderInterface
 
         $this->sfBuilder->setParameter(
             $parameterName,
-            $value
+            $this->escapeValue($value)
         );
+    }
+
+    /**
+     * Register a '%env(...)%' placeholder built by this bridge, it must not be escaped to be resolved by Symfony.
+     */
+    private function setEnvPlaceholder(string $parameterName, string $placeholder): void
+    {
+        $this->sfBuilder->setParameter($parameterName, $placeholder);
     }
 
     private function extractDIDefinition(ContainerInterface $container, string $entryName): DIDefinition
     {
         $diReference = null;
         $diDefinition = null;
+        $visited = [];
         do {
             if ($diDefinition instanceof DIReference) {
                 $entryName = $diDefinition->getTargetEntryName();
             }
 
+            if (isset($visited[$entryName])) {
+                throw new SfRuntimeException(
+                    "PHP-DI Bridge : Circular reference detected for '$entryName' ("
+                    . implode(' -> ', [...array_keys($visited), $entryName]) . ')'
+                );
+            }
+
+            $visited[$entryName] = true;
             $diDefinition = $container->extractDefinition($entryName);
 
             //Symfony container passed is not fully completed (tmp container), so if the reference was not found,
@@ -250,35 +324,92 @@ class BridgeBuilder implements BridgeBuilderInterface
         throw new ServiceNotFoundException("PHP-DI Bridge : Service $entryName is not available in PHP-DI Container");
     }
 
-    private function getClassFromFactory(FactoryDefinition $definition): string
+    /**
+     * Returns the reflection of the callable used by a PHP-DI factory, for all callable forms supported by PHP-DI:
+     * closures, invokable objects, [object, method], [class name, method] (static or resolved by PHP-DI at runtime),
+     * 'Class::method' strings, function names and invokable class names.
+     */
+    private function getFactoryReflection(FactoryDefinition $definition): ReflectionFunctionAbstract
     {
         $definitionName = $definition->getName();
         $callable = $definition->getCallable();
 
-        $reflectionMethod = null;
-        if (!$callable instanceof Closure && is_object($callable)) {
-            //Invokable object
-            $reflectionObject = new ReflectionObject($callable);
-            $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (is_array($callable) && is_callable($callable) && is_object($callable[0])) {
-            //Callable is a public method from object
-            $reflectionObject = new ReflectionObject($callable[0]);
-            $reflectionMethod = $reflectionObject->getMethod($callable[1]);
-        } elseif ($callable instanceof Closure || (is_string($callable) && is_callable($callable))) {
-            //Is internal function or a closure
-            $reflectionMethod = new ReflectionFunction($callable);
-        } else {
-            throw new SfRuntimeException("PHP-DI Bridge : Callable not supported for '$definitionName'");
+        try {
+            if ($callable instanceof Closure) {
+                return new ReflectionFunction($callable);
+            }
+
+            if (is_object($callable)) {
+                //Invokable object
+                return new ReflectionMethod($callable, '__invoke');
+            }
+
+            if (
+                is_array($callable)
+                && 2 === count($callable)
+                && is_string($callable[1])
+                && (is_object($callable[0]) || (is_string($callable[0]) && class_exists($callable[0])))
+            ) {
+                //Public method from an object, or from a class name (static, or instantiated by PHP-DI at runtime)
+                return new ReflectionMethod($callable[0], $callable[1]);
+            }
+
+            if (is_string($callable)) {
+                if (str_contains($callable, '::')) {
+                    return ReflectionMethod::createFromMethodName($callable);
+                }
+
+                if (function_exists($callable)) {
+                    return new ReflectionFunction($callable);
+                }
+
+                if (class_exists($callable) && method_exists($callable, '__invoke')) {
+                    //Invokable class, instantiated by PHP-DI at runtime
+                    return new ReflectionMethod($callable, '__invoke');
+                }
+            }
+        } catch (ReflectionException $error) {
+            throw new SfRuntimeException(
+                "PHP-DI Bridge : Invalid callable for '$definitionName' : " . $error->getMessage(),
+                0,
+                $error,
+            );
         }
 
-        $returnType = $reflectionMethod->getReturnType();
+        throw new SfRuntimeException("PHP-DI Bridge : Callable not supported for '$definitionName'");
+    }
+
+    private function getClassFromFactory(FactoryDefinition $definition): string
+    {
+        $definitionName = $definition->getName();
+        $reflection = $this->getFactoryReflection($definition);
+
+        $returnType = $reflection->getReturnType();
         if (!$returnType instanceof ReflectionNamedType) {
             throw new SfRuntimeException(
                 "PHP-DI Bridge : Missing a return type or non ReflectionNamedType from Reflection for '$definitionName'"
             );
         }
 
-        return $returnType->getName();
+        $className = $returnType->getName();
+        if ('self' !== $className && 'static' !== $className) {
+            return $className;
+        }
+
+        //self and static return types are resolved from the declaring class, or from the closure's scope
+        $scopeClass = match (true) {
+            $reflection instanceof ReflectionMethod => $reflection->getDeclaringClass(),
+            $reflection instanceof ReflectionFunction => $reflection->getClosureScopeClass(),
+            default => null,
+        };
+
+        if (null === $scopeClass) {
+            throw new SfRuntimeException(
+                "PHP-DI Bridge : Unable to resolve the '$className' return type for '$definitionName'"
+            );
+        }
+
+        return $scopeClass->getName();
     }
 
     /**
@@ -300,10 +431,125 @@ class BridgeBuilder implements BridgeBuilderInterface
     }
 
     /**
+     * Symfony parameters can only hold scalars, enums, null and arrays of them. An array holding objects (nested
+     * PHP-DI definitions like DI\get() or DI\create(), or raw objects) must be registered as a service.
+     *
+     * @param array<int|string, mixed> $array
+     */
+    private function containsObjects(array $array): bool
+    {
+        foreach ($array as &$value) {
+            if (is_array($value)) {
+                if ($this->containsObjects($value)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (is_object($value) && !$value instanceof UnitEnum) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<int|string, mixed> $values
      * @param array<string, SfDefinition> $definitions
      */
-    private function convertDefinition(DIDefinition $diDefinition, string $entryName, array &$definitions): void
+    private function exportArray(array $values, string $entryName, array &$definitions): void
     {
+        if ($this->containsObjects($values)) {
+            //Resolved by PHP-DI at runtime, registered into Symfony as a private service returning an array :
+            //Symfony's Container::get() can only return objects, but arrays can be injected as arguments.
+            $definitions[$entryName] = $this->createDefinition('array', $entryName, false);
+
+            return;
+        }
+
+        $this->setParameter($entryName, $values);
+    }
+
+    /**
+     * Checks if a PHP-DI entry will be available as a Symfony parameter: the entry is exported by this builder as a
+     * parameter (string, scalar value, array without objects, environment variable) or is already a Symfony parameter.
+     */
+    private function isExportedAsParameter(ContainerInterface $container, string $entryName): bool
+    {
+        try {
+            $definition = $this->extractDIDefinition($container, $entryName);
+        } catch (ServiceNotFoundException) {
+            return $this->sfBuilder->hasParameter($entryName);
+        }
+
+        if ($definition instanceof ValueDefinition) {
+            $value = $definition->getValue();
+
+            return match (true) {
+                is_array($value) => !$this->containsObjects($this->convertArrayDefinition($value)),
+                is_object($value) => $value instanceof UnitEnum,
+                default => true,
+            };
+        }
+
+        return match (true) {
+            $definition instanceof StringDefinition,
+            $definition instanceof EnvironmentVariableDefinition => true,
+            $definition instanceof ArrayDefinition => !$this->containsObjects(
+                $this->convertArrayDefinition($definition->getValues())
+            ),
+            //Reference not resolved by PHP-DI, available only if it is a Symfony's parameter
+            $definition instanceof DIReference => $this->sfBuilder->hasParameter($entryName),
+            default => false,
+        };
+    }
+
+    private function convertEnvironmentVariable(
+        ContainerInterface $container,
+        EnvironmentVariableDefinition $diDefinition,
+        string $entryName,
+    ): void {
+        $variableName = $diDefinition->getVariableName();
+        if (!$diDefinition->isOptional()) {
+            $this->setEnvPlaceholder($entryName, '%env(' . $variableName . ')%');
+
+            return;
+        }
+
+        $defaultValue = $diDefinition->getDefaultValue();
+        if ($defaultValue instanceof DIReference) {
+            //The default value is another entry, it must be available as Symfony parameter
+            $defaultEntryName = $defaultValue->getTargetEntryName();
+            if (!$this->isExportedAsParameter($container, $defaultEntryName)) {
+                throw new InvalidArgumentException(
+                    "PHP-DI Bridge : The default value of the environment variable '$variableName' for '$entryName' "
+                    . "references '$defaultEntryName', not available as a Symfony parameter"
+                );
+            }
+        } elseif ($defaultValue instanceof DIDefinition) {
+            throw new InvalidArgumentException(
+                "PHP-DI Bridge : The default value of the environment variable '$variableName' for '$entryName' "
+                . 'must be a scalar, an array or a reference to a parameter entry, ' . $defaultValue::class . ' given'
+            );
+        } else {
+            $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
+            $this->setParameter($defaultEntryName, $defaultValue);
+        }
+
+        $this->setEnvPlaceholder($entryName, '%env(default:' . $defaultEntryName . ':' . $variableName . ')%');
+    }
+
+    /**
+     * @param array<string, SfDefinition> $definitions
+     */
+    private function convertDefinition(
+        ContainerInterface $container,
+        DIDefinition $diDefinition,
+        string $entryName,
+        array &$definitions,
+    ): void {
         if ($diDefinition instanceof ObjectDefinition) {
             $definitions[$entryName] = $this->createDefinition($diDefinition->getClassName(), $entryName);
 
@@ -327,16 +573,7 @@ class BridgeBuilder implements BridgeBuilderInterface
         }
 
         if ($diDefinition instanceof EnvironmentVariableDefinition) {
-            if ($diDefinition->isOptional()) {
-                $defaultEntryName = self::PREFIX_FOR_DEFAULT_ENV_VALUE . $entryName;
-                $this->setParameter($defaultEntryName, $diDefinition->getDefaultValue());
-                $this->setParameter(
-                    $entryName,
-                    '%env(default:' . $defaultEntryName . ':' . $diDefinition->getVariableName() . ')%',
-                );
-            } else {
-                $this->setParameter($entryName, '%env(' . $diDefinition->getVariableName() . ')%');
-            }
+            $this->convertEnvironmentVariable($container, $diDefinition, $entryName);
 
             return;
         }
@@ -348,13 +585,27 @@ class BridgeBuilder implements BridgeBuilderInterface
         }
 
         if ($diDefinition instanceof ValueDefinition) {
-            $this->setParameter($entryName, $diDefinition->getValue());
+            $value = $diDefinition->getValue();
+            if (is_object($value) && !$value instanceof UnitEnum) {
+                //Objects (and closures) can not be Symfony parameters, they are registered as services
+                $definitions[$entryName] = $this->createDefinition($value::class, $entryName);
+
+                return;
+            }
+
+            if (is_array($value)) {
+                $this->exportArray($this->convertArrayDefinition($value), $entryName, $definitions);
+
+                return;
+            }
+
+            $this->setParameter($entryName, $value);
 
             return;
         }
 
         if ($diDefinition instanceof ArrayDefinition) {
-            $this->setParameter($entryName, $this->convertArrayDefinition($diDefinition->getValues()));
+            $this->exportArray($this->convertArrayDefinition($diDefinition->getValues()), $entryName, $definitions);
         }
     }
 
@@ -368,6 +619,10 @@ class BridgeBuilder implements BridgeBuilderInterface
         ];
 
         foreach ($diContainer->getKnownEntryNames() as $entryName) {
+            if (in_array($entryName, self::INTERNAL_ENTRIES, true)) {
+                continue;
+            }
+
             if (class_exists($entryName) || interface_exists($entryName)) {
                 $definitions[$entryName] = $this->createDefinition($entryName, $entryName);
 
@@ -376,7 +631,7 @@ class BridgeBuilder implements BridgeBuilderInterface
 
             $diDefinition = $this->extractDIDefinition($diContainer, $entryName);
 
-            $this->convertDefinition($diDefinition, $entryName, $definitions);
+            $this->convertDefinition($diContainer, $diDefinition, $entryName, $definitions);
         }
 
         $this->sfBuilder->addDefinitions($definitions);
