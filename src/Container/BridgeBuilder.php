@@ -37,9 +37,11 @@ use DI\Definition\Reference as DIReference;
 use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
+use ReflectionException;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionObject;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SfContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SfDefinition;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException as SfRuntimeException;
@@ -51,16 +53,19 @@ use UnitEnum;
 
 use function array_keys;
 use function class_exists;
+use function count;
+use function function_exists;
 use function gettype;
 use function implode;
 use function interface_exists;
 use function is_array;
-use function is_callable;
 use function is_object;
 use function is_scalar;
 use function is_string;
 use function iterator_to_array;
 use function krsort;
+use function method_exists;
+use function str_contains;
 
 /**
  * Class used during the compilation of Symfony.
@@ -261,35 +266,92 @@ class BridgeBuilder implements BridgeBuilderInterface
         throw new ServiceNotFoundException("PHP-DI Bridge : Service $entryName is not available in PHP-DI Container");
     }
 
-    private function getClassFromFactory(FactoryDefinition $definition): string
+    /**
+     * Returns the reflection of the callable used by a PHP-DI factory, for all callable forms supported by PHP-DI:
+     * closures, invokable objects, [object, method], [class name, method] (static or resolved by PHP-DI at runtime),
+     * 'Class::method' strings, function names and invokable class names.
+     */
+    private function getFactoryReflection(FactoryDefinition $definition): ReflectionFunctionAbstract
     {
         $definitionName = $definition->getName();
         $callable = $definition->getCallable();
 
-        $reflectionMethod = null;
-        if (!$callable instanceof Closure && is_object($callable)) {
-            //Invokable object
-            $reflectionObject = new ReflectionObject($callable);
-            $reflectionMethod = $reflectionObject->getMethod('__invoke');
-        } elseif (is_array($callable) && is_callable($callable) && is_object($callable[0])) {
-            //Callable is a public method from object
-            $reflectionObject = new ReflectionObject($callable[0]);
-            $reflectionMethod = $reflectionObject->getMethod($callable[1]);
-        } elseif ($callable instanceof Closure || (is_string($callable) && is_callable($callable))) {
-            //Is internal function or a closure
-            $reflectionMethod = new ReflectionFunction($callable);
-        } else {
-            throw new SfRuntimeException("PHP-DI Bridge : Callable not supported for '$definitionName'");
+        try {
+            if ($callable instanceof Closure) {
+                return new ReflectionFunction($callable);
+            }
+
+            if (is_object($callable)) {
+                //Invokable object
+                return new ReflectionMethod($callable, '__invoke');
+            }
+
+            if (
+                is_array($callable)
+                && 2 === count($callable)
+                && is_string($callable[1])
+                && (is_object($callable[0]) || (is_string($callable[0]) && class_exists($callable[0])))
+            ) {
+                //Public method from an object, or from a class name (static, or instantiated by PHP-DI at runtime)
+                return new ReflectionMethod($callable[0], $callable[1]);
+            }
+
+            if (is_string($callable)) {
+                if (str_contains($callable, '::')) {
+                    return ReflectionMethod::createFromMethodName($callable);
+                }
+
+                if (function_exists($callable)) {
+                    return new ReflectionFunction($callable);
+                }
+
+                if (class_exists($callable) && method_exists($callable, '__invoke')) {
+                    //Invokable class, instantiated by PHP-DI at runtime
+                    return new ReflectionMethod($callable, '__invoke');
+                }
+            }
+        } catch (ReflectionException $error) {
+            throw new SfRuntimeException(
+                "PHP-DI Bridge : Invalid callable for '$definitionName' : " . $error->getMessage(),
+                0,
+                $error,
+            );
         }
 
-        $returnType = $reflectionMethod->getReturnType();
+        throw new SfRuntimeException("PHP-DI Bridge : Callable not supported for '$definitionName'");
+    }
+
+    private function getClassFromFactory(FactoryDefinition $definition): string
+    {
+        $definitionName = $definition->getName();
+        $reflection = $this->getFactoryReflection($definition);
+
+        $returnType = $reflection->getReturnType();
         if (!$returnType instanceof ReflectionNamedType) {
             throw new SfRuntimeException(
                 "PHP-DI Bridge : Missing a return type or non ReflectionNamedType from Reflection for '$definitionName'"
             );
         }
 
-        return $returnType->getName();
+        $className = $returnType->getName();
+        if ('self' !== $className && 'static' !== $className) {
+            return $className;
+        }
+
+        //self and static return types are resolved from the declaring class, or from the closure's scope
+        $scopeClass = match (true) {
+            $reflection instanceof ReflectionMethod => $reflection->getDeclaringClass(),
+            $reflection instanceof ReflectionFunction => $reflection->getClosureScopeClass(),
+            default => null,
+        };
+
+        if (null === $scopeClass) {
+            throw new SfRuntimeException(
+                "PHP-DI Bridge : Unable to resolve the '$className' return type for '$definitionName'"
+            );
+        }
+
+        return $scopeClass->getName();
     }
 
     /**

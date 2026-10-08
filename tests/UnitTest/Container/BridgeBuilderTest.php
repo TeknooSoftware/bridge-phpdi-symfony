@@ -36,6 +36,7 @@ use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
@@ -46,6 +47,8 @@ use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\FactoryFixture;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\InvokableFixture;
 
 use function func_get_args;
 
@@ -292,6 +295,125 @@ class BridgeBuilderTest extends TestCase
             ->loadDefinition($definitionsFiles)
             ->import('hello', 'world')
             ->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: callable|array|string, 1: string}>
+     */
+    public static function provideSupportedFactoryCallables(): iterable
+    {
+        yield 'closure' => [fn (): \stdClass => new \stdClass(), \stdClass::class];
+        yield 'closure with static return type' => [
+            \Closure::bind(fn (): static => $this, new FactoryFixture(), FactoryFixture::class),
+            FactoryFixture::class,
+        ];
+        yield 'invokable object' => [new InvokableFixture(), \stdClass::class];
+        yield 'object and method' => [[new FactoryFixture(), 'create'], \stdClass::class];
+        yield 'class name and instance method' => [[FactoryFixture::class, 'create'], \stdClass::class];
+        yield 'class name and static method' => [[FactoryFixture::class, 'createStatic'], \stdClass::class];
+        yield 'class::staticMethod string' => [FactoryFixture::class . '::createStatic', \stdClass::class];
+        yield 'class::instanceMethod string' => [FactoryFixture::class . '::create', \stdClass::class];
+        yield 'invokable class name' => [InvokableFixture::class, \stdClass::class];
+        yield 'function name' => ['DI\\value', ValueDefinition::class];
+        yield 'self return type' => [[FactoryFixture::class, 'createSelf'], FactoryFixture::class];
+        yield 'static return type' => [[FactoryFixture::class, 'createStatic2'], FactoryFixture::class];
+    }
+
+    /**
+     * @param callable|array|string $callable
+     */
+    #[DataProvider('provideSupportedFactoryCallables')]
+    public function testInitializeSymfonyContainerWithSupportedFactoryCallables(
+        callable|array|string $callable,
+        string $expectedClass,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryFactory']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturn(new FactoryDefinition('entryFactory', $callable));
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryFactory' => new SfDefinition($expectedClass)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryFactory'])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: callable|array|string, 1: string}>
+     */
+    public static function provideUnsupportedFactoryCallables(): iterable
+    {
+        yield 'unknown class and method' => [['NotAnExistingClass', 'create'], 'Callable not supported'];
+        yield 'unknown method' => [[FactoryFixture::class, 'unknownMethod'], 'Invalid callable'];
+        yield 'unknown class::method string' => ['NotAnExistingClass::create', 'Invalid callable'];
+        yield 'unknown function' => ['not_an_existing_function', 'Callable not supported'];
+        yield 'not invokable class' => [FactoryFixture::class, 'Callable not supported'];
+        yield 'array with too many items' => [[FactoryFixture::class, 'create', 'foo'], 'Callable not supported'];
+        yield 'missing return type' => [[FactoryFixture::class, 'withoutReturnType'], 'Missing a return type'];
+    }
+
+    /**
+     * @param callable|array|string $callable
+     */
+    #[DataProvider('provideUnsupportedFactoryCallables')]
+    public function testInitializeSymfonyContainerWithUnsupportedFactoryCallables(
+        callable|array|string $callable,
+        string $expectedMessage,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryFactory']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturn(new FactoryDefinition('entryFactory', $callable));
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        $this->buildInstance()->initializeSymfonyContainer();
     }
 
     private function prepareForInitializeSymfonyContainerTests(
