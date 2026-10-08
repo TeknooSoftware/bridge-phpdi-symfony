@@ -181,6 +181,39 @@ class BridgeBuilderTest extends TestCase
             ->initializeSymfonyContainer());
     }
 
+    public function testInitializeSymfonyContainerWithCircularReferences(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryA']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryA', new DIReference('entryB')],
+                ['entryB', new DIReference('entryC')],
+                ['entryC', new DIReference('entryA')],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Circular reference detected for 'entryA' (entryA -> entryB -> entryC -> entryA)");
+
+        $this->buildInstance()
+            ->loadDefinition([['priority' => 0, 'file' => 'foo']])
+            ->initializeSymfonyContainer();
+    }
+
     public function testInitializeSymfonyContainerWithNotSupportedCallableFactory(): void
     {
         $this->sfContainer = $this->createMock(SfContainerBuilder::class);

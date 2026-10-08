@@ -28,6 +28,7 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 
 #[CoversNothing]
 class InvalidConfigurationTest extends AbstractFunctionalTests
@@ -37,5 +38,13 @@ class InvalidConfigurationTest extends AbstractFunctionalTests
         $this->expectException(InvalidConfigurationException::class);
 
         $this->createKernel('invalid_definition.yml');
+    }
+
+    public function testKernelRefusesCircularReferencesBetweenPhpDiEntries(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Circular reference detected');
+
+        $this->createKernel('circular.yml');
     }
 }

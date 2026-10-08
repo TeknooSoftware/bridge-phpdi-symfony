@@ -49,8 +49,10 @@ use Teknoo\DI\SymfonyBridge\Container\Exception\InvalidContainerException;
 use Traversable;
 use UnitEnum;
 
+use function array_keys;
 use function class_exists;
 use function gettype;
+use function implode;
 use function interface_exists;
 use function is_array;
 use function is_callable;
@@ -229,11 +231,20 @@ class BridgeBuilder implements BridgeBuilderInterface
     {
         $diReference = null;
         $diDefinition = null;
+        $visited = [];
         do {
             if ($diDefinition instanceof DIReference) {
                 $entryName = $diDefinition->getTargetEntryName();
             }
 
+            if (isset($visited[$entryName])) {
+                throw new SfRuntimeException(
+                    "PHP-DI Bridge : Circular reference detected for '$entryName' ("
+                    . implode(' -> ', [...array_keys($visited), $entryName]) . ')'
+                );
+            }
+
+            $visited[$entryName] = true;
             $diDefinition = $container->extractDefinition($entryName);
 
             //Symfony container passed is not fully completed (tmp container), so if the reference was not found,
