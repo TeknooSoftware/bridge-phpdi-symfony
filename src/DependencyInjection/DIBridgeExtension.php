@@ -78,7 +78,7 @@ class DIBridgeExtension extends Extension implements PrependExtensionInterface
             return;
         }
 
-        foreach ($configuration['extensions'] as $extensionConfiguration) {
+        foreach ($configuration['extensions'] as &$extensionConfiguration) {
             if (is_string($extensionConfiguration) && '' !== $extensionConfiguration) {
                 yield $extensionConfiguration;
 
@@ -101,8 +101,9 @@ class DIBridgeExtension extends Extension implements PrependExtensionInterface
      */
     public function prepend(SymfonyContainerBuilder $container): void
     {
-        /** @var array<string, mixed> $configuration */
-        foreach ($container->getExtensionConfig($this->getAlias()) as $configuration) {
+        /** @var array<int, array<string, mixed>> $configurations */
+        $configurations = $container->getExtensionConfig($this->getAlias());
+        foreach ($configurations as &$configuration) {
             foreach ($this->extractExtensionsNames($configuration) as $name) {
                 if (isset($this->preloadedExtensions[$name]) || !$container->has($name)) {
                     continue;
@@ -195,9 +196,10 @@ class DIBridgeExtension extends Extension implements PrependExtensionInterface
             }
         }
 
+        unset($extensionConfiguration);
         krsort($toOrder);
 
-        foreach ($toOrder as $namesList) {
+        foreach ($toOrder as &$namesList) {
             foreach ($namesList as $name) {
                 if (isset($this->preloadedExtensions[$name])) {
                     $this->configureExtension($this->preloadedExtensions[$name], $builder);

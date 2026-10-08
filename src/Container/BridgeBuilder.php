@@ -145,7 +145,7 @@ class BridgeBuilder implements BridgeBuilderInterface
      */
     public function loadDefinition(array $definitions): self
     {
-        foreach ($definitions as $definition) {
+        foreach ($definitions as &$definition) {
             $this->definitionsFiles[$definition['file']] = $definition;
         }
 
@@ -165,15 +165,16 @@ class BridgeBuilder implements BridgeBuilderInterface
     private function getOrderedDefinitionsFiles(): Traversable
     {
         $toOrder = [];
-        foreach ($this->definitionsFiles as $definitionFile) {
+        foreach ($this->definitionsFiles as &$definitionFile) {
             $toOrder[(int) ($definitionFile['priority'] ?? 0)][] = $definitionFile['file'];
         }
 
+        unset($definitionFile);
         krsort($toOrder);
 
         //Can not use yield from with iterator_to_array, skip first entries
-        foreach ($toOrder as $list) {
-            foreach ($list as $file) {
+        foreach ($toOrder as &$list) {
+            foreach ($list as &$file) {
                 yield $file;
             }
         }
@@ -244,7 +245,7 @@ class BridgeBuilder implements BridgeBuilderInterface
 
         if (is_array($value)) {
             $escaped = [];
-            foreach ($value as $key => $item) {
+            foreach ($value as $key => &$item) {
                 if (is_string($item) || is_array($item)) {
                     $escaped[$key] = $this->escapeValue($item);
 
@@ -419,7 +420,7 @@ class BridgeBuilder implements BridgeBuilderInterface
     private function convertArrayDefinition(array $array): array
     {
         $final = [];
-        foreach ($array as $key => $value) {
+        foreach ($array as $key => &$value) {
             if ($value instanceof ArrayDefinition) {
                 $final[$key] = $this->convertArrayDefinition($value->getValues());
             } else {
@@ -438,7 +439,7 @@ class BridgeBuilder implements BridgeBuilderInterface
      */
     private function containsObjects(array $array): bool
     {
-        foreach ($array as $value) {
+        foreach ($array as &$value) {
             if (is_array($value)) {
                 if ($this->containsObjects($value)) {
                     return true;
