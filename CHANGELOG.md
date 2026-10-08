@@ -1,5 +1,30 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [7.2.0] - 2026-10-08
+### Stable Release
+- Fix: functional tests were never executed (`*Tests.php` files not discovered), renamed to `*Test.php`, fixtures
+  made compatible with Symfony 7+.
+- Fix: `di_bridge.definitions[].file` and `di_bridge.extensions[].name` are required and can not be empty, instead of
+  a PHP warning at compile time.
+- Fix: circular references between PHP-DI entries (`'a' => get('b'), 'b' => get('a')`) looped forever during the
+  Symfony compilation, a `RuntimeException` naming the cycle is now thrown.
+- Fix: all PHP-DI factory callable forms are supported (`[Class::class, 'method']`, `'Class::method'`, invokable
+  class name, function name), `self`/`static` return types are resolved, reflection errors are wrapped into
+  `RuntimeException`.
+- Fix: percent signs in PHP-DI values exported as Symfony parameters are escaped, `value('a%b%c')` no longer breaks
+  the compilation and `value('100%%')` is no longer unescaped.
+  **Behavior change**: `%param%` inside a PHP-DI value is no longer resolved by Symfony, use `DI\get('param')`.
+- Fix: `DI\value()` with an object or a closure is registered as a Symfony service instead of throwing.
+- Fix: PHP-DI arrays holding nested definitions or objects are registered as private, injectable, Symfony services
+  returning an array, instead of crashing the container dump.
+- Fix: `DI\env()` accepts a `DI\get()` reference to a parameter entry as default value.
+- Fix: PHP-DI internal entries (`Psr\Container\ContainerInterface`, `DI\Container`, `DI\FactoryInterface`,
+  `Invoker\InvokerInterface`) are no longer exported as public Symfony services.
+  **Behavior change**: alias `Teknoo\DI\SymfonyBridge\Container\Bridge` if you need the bridge from Symfony.
+- Fix: `di_bridge.extensions` declared by a Symfony service id now work in a real kernel, `DIBridgeExtension`
+  implements `PrependExtensionInterface` to fetch them from the application's container.
+- Minor cleanups, documentation (README, AGENTS.md, CONTRIBUTING) updated.
+
 ## [7.1.3] - 2026-04-28
 ### Stable Release
 - Update PHPStan and fix false positive
