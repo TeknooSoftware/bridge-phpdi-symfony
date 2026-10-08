@@ -28,6 +28,7 @@ namespace Teknoo\DI\SymfonyBridge\DependencyInjection;
 use DI\ContainerBuilder as DIContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilderInterface;
 use Teknoo\DI\SymfonyBridge\Container\Container;
@@ -49,14 +50,79 @@ use function is_numeric;
  * @license     http://teknoo.software/license/bsd-3         3-Clause BSD License
  * @author      Richard Déloge <richard@teknoo.software>
  */
-class DIBridgeExtension extends Extension
+class DIBridgeExtension extends Extension implements PrependExtensionInterface
 {
+    /**
+     * Extensions declared by a Symfony service id, fetched from the application's container during `prepend()`.
+     * (During `load()`, Symfony passes a temporary empty container where application's services are not available).
+     *
+     * @var array<string, object>
+     */
+    private array $preloadedExtensions = [];
+
     /**
      * @param class-string<BridgeBuilder> $bridgeBuilderClass
      */
     public function __construct(
         private readonly string $bridgeBuilderClass = BridgeBuilder::class,
     ) {
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     * @return iterable<string>
+     */
+    private function extractExtensionsNames(array $configuration): iterable
+    {
+        if (empty($configuration['extensions']) || !is_array($configuration['extensions'])) {
+            return;
+        }
+
+        foreach ($configuration['extensions'] as &$extensionConfiguration) {
+            if (is_string($extensionConfiguration) && '' !== $extensionConfiguration) {
+                yield $extensionConfiguration;
+
+                continue;
+            }
+
+            if (
+                is_array($extensionConfiguration)
+                && !empty($extensionConfiguration['name'])
+                && is_string($extensionConfiguration['name'])
+            ) {
+                yield $extensionConfiguration['name'];
+            }
+        }
+    }
+
+    /**
+     * Extensions declared by a Symfony's service id must be fetched from the application's container, before Symfony
+     * calls `load()` with a temporary container.
+     */
+    public function prepend(SymfonyContainerBuilder $container): void
+    {
+        /** @var array<int, array<string, mixed>> $configurations */
+        $configurations = $container->getExtensionConfig($this->getAlias());
+        foreach ($configurations as &$configuration) {
+            foreach ($this->extractExtensionsNames($configuration) as $name) {
+                if (isset($this->preloadedExtensions[$name]) || !$container->has($name)) {
+                    continue;
+                }
+
+                $this->preloadedExtensions[$name] = $container->get($name);
+            }
+        }
+    }
+
+    private function configureExtension(object $extension, BridgeBuilderInterface $builder): void
+    {
+        if (!$extension instanceof BridgeExtensionInterface) {
+            throw new InvalidExtensionException(
+                $extension::class . ' is not an implementation of ' . BridgeExtensionInterface::class
+            );
+        }
+
+        $extension->configure($builder);
     }
 
     /**
@@ -135,16 +201,14 @@ class DIBridgeExtension extends Extension
 
         foreach ($toOrder as &$namesList) {
             foreach ($namesList as $name) {
+                if (isset($this->preloadedExtensions[$name])) {
+                    $this->configureExtension($this->preloadedExtensions[$name], $builder);
+
+                    continue;
+                }
+
                 if ($container->has($name)) {
-                    $extension = $container->get($name);
-
-                    if (!$extension instanceof BridgeExtensionInterface) {
-                        throw new InvalidExtensionException(
-                            $extension::class . ' is not an implementation of ' . BridgeExtensionInterface::class
-                        );
-                    }
-
-                    $extension->configure($builder);
+                    $this->configureExtension($container->get($name), $builder);
 
                     continue;
                 }

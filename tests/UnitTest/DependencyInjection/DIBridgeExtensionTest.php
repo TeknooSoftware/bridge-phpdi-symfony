@@ -33,6 +33,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Teknoo\DI\SymfonyBridge\DependencyInjection\DIBridgeExtension;
 use Teknoo\DI\SymfonyBridge\Extension\InvalidExtensionException;
 use Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection\Support\ExtensionMock;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\DependencyInjection\Support\InvalidExtensionMock;
 use TypeError;
 
 #[CoversClass(DIBridgeExtension::class)]
@@ -129,6 +130,91 @@ class DIBridgeExtensionTest extends TestCase
         );
 
         $this->assertEquals(2, $ext->counter);
+    }
+
+    private function buildContainerWithServiceExtension(string $serviceClass, DIBridgeExtension $extension): ContainerBuilder
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension($extension);
+        $container->register('ext.svc', $serviceClass)
+            ->setFactory([$serviceClass, 'create'])
+            ->setPublic(true);
+        $container->loadFromExtension(
+            'di_bridge',
+            [
+                'extensions' => [
+                    'ext.svc',
+                    ['priority' => 1, 'name' => ExtensionMock::class],
+                    'service.not.found',
+                ],
+            ],
+        );
+
+        return $container;
+    }
+
+    public function testPrependPreloadsExtensionsDeclaredByServiceIdForLoad(): void
+    {
+        $extension = $this->buildInstance();
+        $container = $this->buildContainerWithServiceExtension(ExtensionMock::class, $extension);
+
+        $ext = ExtensionMock::create();
+        $ext->counter = 0;
+
+        $extension->prepend($container);
+
+        //Like the temporary container passed by Symfony to load(), without any application's services
+        $this->container = $this->createMock(ContainerBuilder::class);
+        $mock = $this->getContainerBuilderStub();
+        $mock->method('has')->willReturn(false);
+        $mock->expects($this->never())->method('get');
+
+        $extension->load(
+            [
+                [
+                    'extensions' => [
+                        'ext.svc',
+                        ['priority' => 1, 'name' => ExtensionMock::class],
+                    ],
+                ],
+            ],
+            $mock
+        );
+
+        //Once from the service, once from the class name
+        $this->assertEquals(2, $ext->counter);
+    }
+
+    public function testPrependWithAServiceNotImplementingTheExtensionInterface(): void
+    {
+        $extension = $this->buildInstance();
+        $container = $this->buildContainerWithServiceExtension(InvalidExtensionMock::class, $extension);
+
+        $extension->prepend($container);
+
+        $stub = $this->getContainerBuilderStub();
+        $stub->method('has')->willReturn(false);
+
+        $this->expectException(InvalidExtensionException::class);
+        $extension->load([['extensions' => ['ext.svc']]], $stub);
+    }
+
+    public function testPrependWithoutExtensionsConfigured(): void
+    {
+        $extension = $this->buildInstance();
+        $container = new ContainerBuilder();
+        $container->registerExtension($extension);
+        $container->loadFromExtension('di_bridge', ['definitions' => ['foo']]);
+
+        $extension->prepend($container);
+
+        $this->container = $this->createMock(ContainerBuilder::class);
+        $mock = $this->getContainerBuilderStub();
+        $mock->expects($this->never())->method('has');
+        $mock->expects($this->never())->method('get');
+
+        $extension->load([['definitions' => ['foo']]], $mock);
+        $this->assertTrue(true);
     }
 
     public function testExceptionOnLoadWithExtensionsWithInvalidService(): void

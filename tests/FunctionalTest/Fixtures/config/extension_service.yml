@@ -1,0 +1,10 @@
+services:
+  test.extension:
+    class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Extension
+    public: false
+
+di_bridge:
+  definitions:
+    - '%kernel.project_dir%/config/di.php'
+  extensions:
+    - test.extension

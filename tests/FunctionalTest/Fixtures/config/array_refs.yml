@@ -1,0 +1,12 @@
+di_bridge:
+  definitions:
+    - '%kernel.project_dir%/config/di_array_refs.php'
+
+services:
+  class2:
+    class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class2
+    public: true
+  array.consumer:
+    class: Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\ArrayConsumer
+    public: true
+    arguments: ['@array.handlers', '@array.nested']

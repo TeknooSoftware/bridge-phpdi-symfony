@@ -29,12 +29,30 @@ namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class ContainerAwareController implements ContainerAwareInterface
-{
-    public ?ContainerInterface $container = null;
+use function interface_exists;
 
-    public function setContainer(?ContainerInterface $container = null): void
+/*
+ * ContainerAwareInterface has been removed in Symfony 7, the class implements it only when it is available
+ * to keep the fixture bootable with every supported Symfony version.
+ */
+if (interface_exists(ContainerAwareInterface::class)) {
+    class ContainerAwareController implements ContainerAwareInterface
     {
-        $this->container = $container;
+        public ?ContainerInterface $container = null;
+
+        public function setContainer(?ContainerInterface $container = null): void
+        {
+            $this->container = $container;
+        }
+    }
+} else {
+    class ContainerAwareController
+    {
+        public ?ContainerInterface $container = null;
+
+        public function setContainer(?ContainerInterface $container = null): void
+        {
+            $this->container = $container;
+        }
     }
 }

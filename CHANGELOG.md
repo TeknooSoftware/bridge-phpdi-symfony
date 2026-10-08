@@ -1,5 +1,36 @@
 # Teknoo Software - PHP-DI integration with Symfony - Change Log
 
+## [7.2.0] - 2026-10-08
+### Stable Release
+#### Security
+- Escape `%` in PHP-DI values exported as Symfony parameters, a value like `'%env(X)%'` is no longer evaluated by
+  Symfony.
+
+#### Fix
+- Functional tests were never executed (`*Tests.php` not discovered by PHPUnit) and fixtures were broken since
+  Symfony 7.
+- `definitions[].file` and `extensions[].name` are required, no more PHP warning at compile time.
+- Circular references between PHP-DI entries no longer loop forever at compile time, a `RuntimeException` names
+  the cycle.
+- All PHP-DI factory callable forms are supported (`[Class::class, 'method']`, `'Class::method'`, invokable class
+  name, function name), `self`/`static` return types are resolved.
+- `DI\value('a%b%c')` no longer breaks the compilation, `DI\value('100%%')` is no longer unescaped.
+- `DI\value()` with an object or a closure is registered as a Symfony service instead of throwing.
+- PHP-DI arrays holding definitions or objects no longer crash the container dump, they are registered as private
+  injectable services returning an array.
+- `DI\env()` accepts a `DI\get()` reference to a parameter entry as default value.
+- `extensions` declared by a Symfony service id now work in a real kernel.
+- Require `php-di/invoker` ^2.2.0, older releases trigger PHP 8.4 deprecations (implicit nullable parameters).
+
+#### Behavior changes
+- `%param%` inside a PHP-DI value is no longer resolved by Symfony, use `DI\get('param')`.
+- PHP-DI internal entries `DI\FactoryInterface` and `Invoker\InvokerInterface` are no longer exported as public
+  Symfony services. `Psr\Container\ContainerInterface` (the bridge) and `DI\Container` stay exported.
+
+#### Documentation
+- README: package name, requirements, `priority`, `extensions`, APCu, compilation path, export rules.
+- AGENTS.md, CONTRIBUTING and SECURITY updated.
+
 ## [7.1.3] - 2026-04-28
 ### Stable Release
 - Update PHPStan and fix false positive

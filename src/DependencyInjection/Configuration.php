@@ -81,7 +81,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                     ->children()
                         ->integerNode('priority')->end()
-                        ->scalarNode('file')->end()
+                        ->scalarNode('file')->isRequired()->cannotBeEmpty()->end()
                     ->end()
                 ->end()
             ->end() // definitions
@@ -97,7 +97,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                     ->children()
                         ->integerNode('priority')->end()
-                        ->scalarNode('name')->end()
+                        ->scalarNode('name')->isRequired()->cannotBeEmpty()->end()
                     ->end()
                 ->end()
             ->end() //extensions

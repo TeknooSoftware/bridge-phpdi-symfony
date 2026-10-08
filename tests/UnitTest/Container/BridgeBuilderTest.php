@@ -28,6 +28,7 @@ namespace Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container;
 use DI\Container as DIContainer;
 use DI\ContainerBuilder as DIContainerBuilder;
 use DI\Definition\ArrayDefinition;
+use DI\Definition\Definition as DIDefinition;
 use DI\Definition\EnvironmentVariableDefinition;
 use DI\Definition\FactoryDefinition;
 use DI\Definition\ObjectDefinition;
@@ -36,6 +37,7 @@ use DI\Definition\StringDefinition;
 use DI\Definition\ValueDefinition;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Alias;
@@ -46,8 +48,13 @@ use Symfony\Component\DependencyInjection\Reference as SfReference;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\DI\SymfonyBridge\Container\BridgeBuilder;
 use Teknoo\DI\SymfonyBridge\Container\Container;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\EnumFixture;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\FactoryFixture;
+use Teknoo\Tests\DI\SymfonyBridge\UnitTest\Container\Support\InvokableFixture;
 
+use function fopen;
 use function func_get_args;
+use function json_encode;
 
 #[CoversClass(BridgeBuilder::class)]
 class BridgeBuilderTest extends TestCase
@@ -181,6 +188,39 @@ class BridgeBuilderTest extends TestCase
             ->initializeSymfonyContainer());
     }
 
+    public function testInitializeSymfonyContainerWithCircularReferences(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryA']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryA', new DIReference('entryB')],
+                ['entryB', new DIReference('entryC')],
+                ['entryC', new DIReference('entryA')],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Circular reference detected for 'entryA' (entryA -> entryB -> entryC -> entryA)");
+
+        $this->buildInstance()
+            ->loadDefinition([['priority' => 0, 'file' => 'foo']])
+            ->initializeSymfonyContainer();
+    }
+
     public function testInitializeSymfonyContainerWithNotSupportedCallableFactory(): void
     {
         $this->sfContainer = $this->createMock(SfContainerBuilder::class);
@@ -258,6 +298,457 @@ class BridgeBuilderTest extends TestCase
         $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
             ->loadDefinition($definitionsFiles)
             ->import('hello', 'world')
+            ->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: callable|array|string, 1: string}>
+     */
+    public static function provideSupportedFactoryCallables(): iterable
+    {
+        yield 'closure' => [fn (): \stdClass => new \stdClass(), \stdClass::class];
+        yield 'closure with static return type' => [
+            \Closure::bind(fn (): static => $this, new FactoryFixture(), FactoryFixture::class),
+            FactoryFixture::class,
+        ];
+        yield 'invokable object' => [new InvokableFixture(), \stdClass::class];
+        yield 'object and method' => [[new FactoryFixture(), 'create'], \stdClass::class];
+        yield 'class name and instance method' => [[FactoryFixture::class, 'create'], \stdClass::class];
+        yield 'class name and static method' => [[FactoryFixture::class, 'createStatic'], \stdClass::class];
+        yield 'class::staticMethod string' => [FactoryFixture::class . '::createStatic', \stdClass::class];
+        yield 'class::instanceMethod string' => [FactoryFixture::class . '::create', \stdClass::class];
+        yield 'invokable class name' => [InvokableFixture::class, \stdClass::class];
+        yield 'function name' => ['DI\\value', ValueDefinition::class];
+        yield 'self return type' => [[FactoryFixture::class, 'createSelf'], FactoryFixture::class];
+        yield 'static return type' => [[FactoryFixture::class, 'createStatic2'], FactoryFixture::class];
+    }
+
+    /**
+     * @param callable|array|string $callable
+     */
+    #[DataProvider('provideSupportedFactoryCallables')]
+    public function testInitializeSymfonyContainerWithSupportedFactoryCallables(
+        callable|array|string $callable,
+        string $expectedClass,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryFactory']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturn(new FactoryDefinition('entryFactory', $callable));
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryFactory' => new SfDefinition($expectedClass)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryFactory'])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: callable|array|string, 1: string}>
+     */
+    public static function provideUnsupportedFactoryCallables(): iterable
+    {
+        yield 'unknown class and method' => [['NotAnExistingClass', 'create'], 'Callable not supported'];
+        yield 'unknown method' => [[FactoryFixture::class, 'unknownMethod'], 'Invalid callable'];
+        yield 'unknown class::method string' => ['NotAnExistingClass::create', 'Invalid callable'];
+        yield 'unknown function' => ['not_an_existing_function', 'Callable not supported'];
+        yield 'not invokable class' => [FactoryFixture::class, 'Callable not supported'];
+        yield 'array with too many items' => [[FactoryFixture::class, 'create', 'foo'], 'Callable not supported'];
+        yield 'missing return type' => [[FactoryFixture::class, 'withoutReturnType'], 'Missing a return type'];
+    }
+
+    /**
+     * @param callable|array|string $callable
+     */
+    #[DataProvider('provideUnsupportedFactoryCallables')]
+    public function testInitializeSymfonyContainerWithUnsupportedFactoryCallables(
+        callable|array|string $callable,
+        string $expectedMessage,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryFactory']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturn(new FactoryDefinition('entryFactory', $callable));
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerEscapesPercentSignsInParameters(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryString', 'entryValue', 'entryArray', 'entryEnv', 'entryEnum']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryString', new StringDefinition('a%b%c')],
+                ['entryValue', new ValueDefinition('100%%')],
+                ['entryArray', new ArrayDefinition(['k' => 'x%y%', 'n' => new ArrayDefinition(['z%'])])],
+                ['entryEnv', new EnvironmentVariableDefinition('ENV_NAME', true, 'd%e%f')],
+                ['entryEnum', new ValueDefinition(EnumFixture::Foo)],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->exactly(6))
+            ->method('setParameter')
+            ->willReturnCallback(
+                fn (): true => match (func_get_args()) {
+                    ['entryString', 'a%%b%%c'] => true,
+                    ['entryValue', '100%%%%'] => true,
+                    ['entryArray', ['k' => 'x%%y%%', 'n' => ['z%%']]] => true,
+                    [BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryEnv', 'd%%e%%f'] => true,
+                    [
+                        'entryEnv',
+                        '%env(default:' . BridgeBuilder::PREFIX_FOR_DEFAULT_ENV_VALUE . 'entryEnv:ENV_NAME)%',
+                    ] => true,
+                    ['entryEnum', EnumFixture::Foo] => true,
+                    default => throw new InvalidArgumentException('Invalid arguments ' . json_encode(func_get_args())),
+                }
+            );
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions');
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    public function testInitializeSymfonyContainerWithArraysContainingDefinitionsRegisteredAsServices(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryArrayWithReferences',
+                'entryArrayWithNestedObject',
+                'entryValueArrayWithObject',
+                'entryPlainArray',
+            ]);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                [
+                    'entryArrayWithReferences',
+                    new ArrayDefinition(['a' => new DIReference('x'), 'b' => 'scalar']),
+                ],
+                [
+                    'entryArrayWithNestedObject',
+                    new ArrayDefinition([
+                        'n' => new ArrayDefinition([new ObjectDefinition('o', \stdClass::class)]),
+                    ]),
+                ],
+                ['entryValueArrayWithObject', new ValueDefinition(['k' => [new \stdClass()]])],
+                ['entryPlainArray', new ArrayDefinition(['k' => 1, 'e' => EnumFixture::Bar, 'n' => ['x']])],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('setParameter')
+            ->with('entryPlainArray', ['k' => 1, 'e' => EnumFixture::Bar, 'n' => ['x']]);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryArrayWithReferences' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryArrayWithReferences'])
+                        ->setPublic(false),
+                    'entryArrayWithNestedObject' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryArrayWithNestedObject'])
+                        ->setPublic(false),
+                    'entryValueArrayWithObject' => new SfDefinition('array')
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryValueArrayWithObject'])
+                        ->setPublic(false),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    public function testInitializeSymfonyContainerWithEnvironmentDefaultValueReferencingParameters(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryEnvToValue', 'entryEnvToString', 'entryEnvToSymfonyParameter', 'entryEnvToArray']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryEnvToValue', new EnvironmentVariableDefinition('ENV_A', true, new DIReference('aValue'))],
+                ['aValue', new ValueDefinition('foo')],
+                ['entryEnvToString', new EnvironmentVariableDefinition('ENV_B', true, new DIReference('aString'))],
+                ['aString', new DIReference('anotherString')],
+                ['anotherString', new StringDefinition('bar')],
+                [
+                    'entryEnvToSymfonyParameter',
+                    new EnvironmentVariableDefinition('ENV_C', true, new DIReference('kernel.environment')),
+                ],
+                ['kernel.environment', null],
+                ['entryEnvToArray', new EnvironmentVariableDefinition('ENV_D', true, new DIReference('anArray'))],
+                ['anArray', new ArrayDefinition(['a' => 1])],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->method('hasParameter')
+            ->willReturnMap([['kernel.environment', true]]);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->exactly(4))
+            ->method('setParameter')
+            ->willReturnCallback(
+                fn (): true => match (func_get_args()) {
+                    ['entryEnvToValue', '%env(default:aValue:ENV_A)%'] => true,
+                    ['entryEnvToString', '%env(default:aString:ENV_B)%'] => true,
+                    ['entryEnvToSymfonyParameter', '%env(default:kernel.environment:ENV_C)%'] => true,
+                    ['entryEnvToArray', '%env(default:anArray:ENV_D)%'] => true,
+                    default => throw new InvalidArgumentException('Invalid arguments ' . json_encode(func_get_args())),
+                }
+            );
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions');
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed, 1: ?DIDefinition}>
+     */
+    public static function provideInvalidEnvironmentDefaultValues(): iterable
+    {
+        yield 'reference to an object' => [new DIReference('target'), new ObjectDefinition('target', \stdClass::class)];
+        yield 'reference to a factory' => [
+            new DIReference('target'),
+            new FactoryDefinition('target', fn (): \stdClass => new \stdClass()),
+        ];
+        yield 'reference to an array with objects' => [
+            new DIReference('target'),
+            new ArrayDefinition([new DIReference('foo')]),
+        ];
+        yield 'reference to an object value' => [new DIReference('target'), new ValueDefinition(new \stdClass())];
+        yield 'reference to an unknown entry' => [new DIReference('target'), null];
+        yield 'nested object definition' => [new ObjectDefinition('target', \stdClass::class), null];
+    }
+
+    #[DataProvider('provideInvalidEnvironmentDefaultValues')]
+    public function testInitializeSymfonyContainerWithInvalidEnvironmentDefaultValue(
+        mixed $defaultValue,
+        ?DIDefinition $targetDefinition,
+    ): void {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn(['entryEnv']);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryEnv', new EnvironmentVariableDefinition('ENV_A', true, $defaultValue)],
+                ['target', $targetDefinition],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('setParameter');
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('addDefinitions');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("default value of the environment variable 'ENV_A' for 'entryEnv'");
+
+        $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerIgnoresPhpDiInternalEntries(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createMock(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                \Psr\Container\ContainerInterface::class,
+                DIContainer::class,
+                \DI\FactoryInterface::class,
+                \Invoker\InvokerInterface::class,
+                \DateTime::class,
+            ]);
+
+        $container->expects($this->never())
+            ->method('extractDefinition');
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    \Psr\Container\ContainerInterface::class => new SfDefinition(\Psr\Container\ContainerInterface::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([\Psr\Container\ContainerInterface::class])
+                        ->setPublic(true),
+                    DIContainer::class => new SfDefinition(DIContainer::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([DIContainer::class])
+                        ->setPublic(true),
+                    \DateTime::class => new SfDefinition(\DateTime::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([\DateTime::class])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
+    }
+
+    public function testDefinitionsFilesAreOrderedByPriorityAndDeduplicated(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            ['high', 'foo', 'bar', 'low'],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()
+            ->loadDefinition([
+                ['priority' => 0, 'file' => 'foo'],
+                ['file' => 'bar'],
+                ['priority' => -5, 'file' => 'low'],
+            ])
+            ->loadDefinition([
+                ['priority' => 10, 'file' => 'high'],
+                //Duplicated file, the last declaration wins but the position is kept
+                ['priority' => 0, 'file' => 'foo'],
+            ])
             ->initializeSymfonyContainer());
     }
 
@@ -460,15 +951,15 @@ class BridgeBuilderTest extends TestCase
         $container
             ->method('getKnownEntryNames')
             ->willReturn([
-                'entryAboutObject',
+                'entryAboutResource',
             ]);
 
         $container->expects($this->exactly(1))
             ->method('extractDefinition')
             ->willReturnMap([
                 [
-                    'entryAboutObject',
-                    (new ValueDefinition(new \stdClass()))
+                    'entryAboutResource',
+                    (new ValueDefinition(fopen('php://memory', 'r')))
                 ],
             ]);
 
@@ -490,6 +981,63 @@ class BridgeBuilderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->buildInstance()->initializeSymfonyContainer();
+    }
+
+    public function testInitializeSymfonyContainerWithObjectValuesRegisteredAsServices(): void
+    {
+        $this->sfContainer = $this->createMock(SfContainerBuilder::class);
+        $container = $this->createStub(Container::class);
+        $container
+            ->method('getKnownEntryNames')
+            ->willReturn([
+                'entryAboutObject',
+                'entryAboutClosure',
+            ]);
+
+        $container
+            ->method('extractDefinition')
+            ->willReturnMap([
+                ['entryAboutObject', new ValueDefinition(new \stdClass())],
+                ['entryAboutClosure', new ValueDefinition(fn (): \stdClass => new \stdClass())],
+            ]);
+
+        $this->getDiBuilderStub()
+            ->method('build')
+            ->willReturn($container);
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->never())
+            ->method('setParameter');
+
+        $this->getSfContainerBuilderStub()
+            ->expects($this->once())
+            ->method('addDefinitions')
+            ->with(
+                [
+                    DIContainerBuilder::class => new SfDefinition(DIContainerBuilder::class),
+                    Bridge::class => new SfDefinition(
+                        Bridge::class,
+                        [
+                            new SfReference(DIContainerBuilder::class),
+                            new SfReference('service_container'),
+                            [],
+                            [],
+                            null,
+                            false
+                        ]
+                    ),
+                    'entryAboutObject' => new SfDefinition(\stdClass::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryAboutObject'])
+                        ->setPublic(true),
+                    'entryAboutClosure' => new SfDefinition(\Closure::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments(['entryAboutClosure'])
+                        ->setPublic(true),
+                ]
+            );
+
+        $this->assertInstanceOf(BridgeBuilder::class, $this->buildInstance()->initializeSymfonyContainer());
     }
 
     public function testInitializeSymfonyContainerWithNoCacheAndNoCompilation(): void

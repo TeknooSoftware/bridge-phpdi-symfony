@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * Symfony Bridge.
  *
@@ -16,6 +14,7 @@ declare(strict_types=1);
  *
  * @copyright   Copyright (c) EIRL Richard Déloge (https://deloge.io - richard@deloge.io)
  * @copyright   Copyright (c) SASU Teknoo Software (https://teknoo.software - contact@teknoo.software)
+ * @copyright Matthieu Napoli (http://mnapoli.fr/)
  *
  * @link        https://teknoo.software/libraries/php-di-symfony-bridge Project website
  *
@@ -23,16 +22,22 @@ declare(strict_types=1);
  * @author      Richard Déloge <richard@teknoo.software>
  */
 
-defined('RUN_CLI_MODE')
-    || define('RUN_CLI_MODE', true);
+namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures;
 
-defined('PHPUNIT')
-    || define('PHPUNIT', true);
+class ProductFactory
+{
+    public function create(): Product
+    {
+        return new Product();
+    }
 
-ini_set('memory_limit', '256M');
+    public static function createStatic(): Product
+    {
+        return new Product();
+    }
 
-require_once __DIR__.'/../vendor/autoload.php';
-
-date_default_timezone_set('UTC');
-
-error_reporting(E_ALL);
+    public function __invoke(): Product
+    {
+        return new Product();
+    }
+}
