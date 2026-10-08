@@ -26,7 +26,9 @@ declare(strict_types=1);
 
 namespace Teknoo\Tests\DI\SymfonyBridge\FunctionalTest;
 
+use DI\Container as DIContainer;
 use PHPUnit\Framework\Attributes\CoversNothing;
+use Psr\Container\ContainerInterface;
 use Teknoo\DI\SymfonyBridge\Container\Bridge;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class1;
 use Teknoo\Tests\DI\SymfonyBridge\FunctionalTest\Fixtures\Class3;
@@ -63,15 +65,27 @@ class BridgeRegistrationTest extends AbstractFunctionalTests
         $kernel = $this->createKernel('empty.yml');
         $container = $kernel->getContainer();
 
-        foreach (
-            [
-                \Psr\Container\ContainerInterface::class,
-                \DI\Container::class,
-                \DI\FactoryInterface::class,
-                \Invoker\InvokerInterface::class,
-            ] as $id
-        ) {
+        foreach ([\DI\FactoryInterface::class, \Invoker\InvokerInterface::class] as $id) {
             $this->assertFalse($container->has($id), "Internal PHP-DI entry $id must not be registered into Symfony");
         }
+    }
+
+    public function testPsrContainerAndPhpDiContainerAreExposedAsPublicSymfonyServices(): void
+    {
+        $kernel = $this->createKernel('empty.yml');
+        $container = $kernel->getContainer();
+
+        $this->assertTrue($container->has(ContainerInterface::class));
+        $this->assertTrue($container->has(DIContainer::class));
+
+        $bridge = $container->get(ContainerInterface::class);
+        $this->assertInstanceOf(Bridge::class, $bridge);
+
+        $diContainer = $container->get(DIContainer::class);
+        $this->assertInstanceOf(DIContainer::class, $diContainer);
+
+        //An entry set at runtime into the PHP-DI container must be resolvable through the bridge
+        $diContainer->set('runtime.entry', 'bar');
+        $this->assertSame('bar', $bridge->get('runtime.entry'));
     }
 }

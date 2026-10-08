@@ -39,7 +39,6 @@ use DI\Definition\ValueDefinition;
 use DI\FactoryInterface;
 use InvalidArgumentException;
 use Invoker\InvokerInterface;
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
@@ -95,10 +94,10 @@ class BridgeBuilder implements BridgeBuilderInterface
 
     /**
      * Entries registered by PHP-DI itself in every container, they must not be exported into Symfony.
+     * `Psr\Container\ContainerInterface` (resolved to the bridge) and `DI\Container` are intentionally exported,
+     * to allow Symfony services and tests to reach the bridge or the PHP-DI container.
      */
     private const array INTERNAL_ENTRIES = [
-        PsrContainerInterface::class,
-        DIContainer::class,
         FactoryInterface::class,
         InvokerInterface::class,
     ];

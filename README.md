@@ -65,9 +65,10 @@ Symfony:
 * Arrays holding objects or nested definitions (like `['handlers' => [DI\get(A::class)]]`) become private Symfony
   services returning an array, resolved by PHP-DI. They can be injected as arguments of Symfony services, but can not
   be fetched with `$container->get()` (Symfony services must be objects).
-* PHP-DI's internal entries (`Psr\Container\ContainerInterface`, `DI\Container`, `DI\FactoryInterface`,
-  `Invoker\InvokerInterface`) are not exported. The bridge is registered as a private
-  `Teknoo\DI\SymfonyBridge\Container\Bridge` service, alias it if you need it from Symfony.
+* PHP-DI's internal entries `DI\FactoryInterface` and `Invoker\InvokerInterface` are not exported.
+  `Psr\Container\ContainerInterface` (resolved to the bridge) and `DI\Container` (the PHP-DI container) are
+  exported as public services. The bridge itself is registered as a private
+  `Teknoo\DI\SymfonyBridge\Container\Bridge` service, alias it if you need it under its own id.
 * Private Symfony services are reachable from PHP-DI definitions only through the aliases declared in `import`
   (`DI\get('symfony.private.service')` fails at runtime, `DI\get('imported_alias')` works).
 * Extensions declared by a Symfony service id are fetched when the bundle's configuration is prepended: the service

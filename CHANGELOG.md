@@ -23,9 +23,8 @@
 
 #### Behavior changes
 - `%param%` inside a PHP-DI value is no longer resolved by Symfony, use `DI\get('param')`.
-- PHP-DI internal entries (`Psr\Container\ContainerInterface`, `DI\Container`, `DI\FactoryInterface`,
-  `Invoker\InvokerInterface`) are no longer exported as public Symfony services, alias
-  `Teknoo\DI\SymfonyBridge\Container\Bridge` if needed.
+- PHP-DI internal entries `DI\FactoryInterface` and `Invoker\InvokerInterface` are no longer exported as public
+  Symfony services. `Psr\Container\ContainerInterface` (the bridge) and `DI\Container` stay exported.
 
 #### Documentation
 - README: package name, requirements, `priority`, `extensions`, APCu, compilation path, export rules.

@@ -688,6 +688,14 @@ class BridgeBuilderTest extends TestCase
                             false
                         ]
                     ),
+                    \Psr\Container\ContainerInterface::class => new SfDefinition(\Psr\Container\ContainerInterface::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([\Psr\Container\ContainerInterface::class])
+                        ->setPublic(true),
+                    DIContainer::class => new SfDefinition(DIContainer::class)
+                        ->setFactory(new SfReference(Bridge::class))
+                        ->setArguments([DIContainer::class])
+                        ->setPublic(true),
                     \DateTime::class => new SfDefinition(\DateTime::class)
                         ->setFactory(new SfReference(Bridge::class))
                         ->setArguments([\DateTime::class])
