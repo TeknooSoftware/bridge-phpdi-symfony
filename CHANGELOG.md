@@ -31,6 +31,8 @@
 - README: package name, requirements, `priority`, `extensions`, APCu, compilation path, export rules.
 - AGENTS.md, CONTRIBUTING and SECURITY updated.
 
+- Version developed with Claude's assistance (Fable 5.1).
+
 ## [7.1.3] - 2026-04-28
 ### Stable Release
 - Update PHPStan and fix false positive
